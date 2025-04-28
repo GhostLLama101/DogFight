@@ -1,4 +1,3 @@
-import GameScene from "./Scenes/Sprite.js";
 
 // debug with extreme prejudice
 "use strict"

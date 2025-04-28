@@ -1,6 +1,6 @@
-import Player from "../objects/player"; // Adjust the path if necessary
+//import Player from "../objects/player.js"; // Adjust the path if necessary
 
-export default class GameScene extends Phaser.Scene {
+class GameScene extends Phaser.Scene {
     constructor() {
         super("Sprite");
         this.startX = 400; // Default X position
@@ -28,7 +28,6 @@ export default class GameScene extends Phaser.Scene {
     create() {
 
         const player = new Player(this);
-        this.playerSprite = player.sprite; // Reference to the player sprite
 
         // Create projectile group for collision detection
         this.projectileGroup = this.physics.add.group();
@@ -57,22 +56,23 @@ export default class GameScene extends Phaser.Scene {
         this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
-        //collision handling
-        this.projectileGroup = this.physics.add.group();
 
         // Add overlap between projectiles and enemy
-        this.physics.add.overlap(this.projectileGroup, this.enemyGroup, this.hitEnemy, null, this);
+        this.physics.add.overlap(
+            this.projectileGroup,
+            this.enemyGroup,
+            this.hitEnemy,
+            null, 
+            this
+        );
 
-        this.physics.add.overlap(this.playerSprite, this.enemyGroup, this.playerHitEnemy, null, this);
-
-
-        
-        this.p_bullet_speed = 10; // fast bullet is 15
-
-        // Track emitted projectiles
-        this.projectiles = [];
-
-        this.physics.world.createDebugGraphic();
+        this.physics.add.overlap(
+            this.playerSprite,
+            this.enemyGroup, 
+            this.playerHitEnemy, 
+            null, 
+            this
+        );
 
     }
     // Function to handle projectile hitting enemy
