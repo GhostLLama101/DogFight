@@ -15,11 +15,11 @@ class GameScene extends Phaser.Scene {
         // Set the path to your assets folder
         this.load.setPath("./assets/");
         // Load the sprite atlas
-        this.load.spritesheet("player" ,"ships.png", { 
+        this.load.spritesheet("player","ships.png", { 
             frameWidth: 32, 
             frameHeight: 32 
         });
-        this.load.spritesheet("bullets", "tiles.png", {
+        this.load.spritesheet("bullets","tiles.png", {
             framwWidth: 16,
             frameWidth: 16
         });
@@ -27,7 +27,7 @@ class GameScene extends Phaser.Scene {
 
     create() {
 
-        const player = new Player(this);
+        this.player = new Player(this);
 
         // Create projectile group for collision detection
         this.projectileGroup = this.physics.add.group();
@@ -67,7 +67,7 @@ class GameScene extends Phaser.Scene {
         );
 
         this.physics.add.overlap(
-            this.playerSprite,
+            this.player,
             this.enemyGroup, 
             this.playerHitEnemy, 
             null, 
@@ -103,22 +103,22 @@ class GameScene extends Phaser.Scene {
         if (!this.player || !this.player.active) return;
         // Handle "A" key (left movement)
         if (this.aKey.isDown) {
-            this.player.moveLeft();
+            this.player.MoveLeft();
         }
 
         // Handle "D" key (right movement)
         if (this.dKey.isDown) {
-            this.player.moveRight();
+            this.player.MoveRight();
         }
 
         // Fire projectile when space is pressed
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-            this.player.shoot();
+            this.player.Shoot();
         }
 
-        // Update projectiles
+        // // Update projectiles
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
-            this.projectiles[i].y -= this.p_bullet_speed;
+            this.projectiles[i].y -= this.player.p_bullet_speed;
             
             // Remove projectiles that go off screen
             if (this.projectiles[i].y < 0) {
@@ -127,5 +127,18 @@ class GameScene extends Phaser.Scene {
                 console.log("player bullet destroyed");
             }
         }
+        
+        // for (let i = this.projectiles.length - 1; i >= 0; i--) {
+        //     // Make sure the projectile exists before updating
+        //     if (this.projectiles[i] && this.projectiles[i].active) {
+        //         this.projectiles[i].y -= this.player.p_bullet_speed;
+                
+        //         // Remove projectiles that go off screen
+        //         if (this.projectiles[i].y < 0) {
+        //             this.projectiles[i].destroy();
+        //             this.projectiles.splice(i, 1);
+        //         }
+        //     }
+        // }
     }
 }
