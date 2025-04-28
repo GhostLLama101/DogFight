@@ -1,4 +1,4 @@
-class Player extends Phaser.Physics.Arcade.Sprite {
+export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     constructor(scene) {
         super(scene, scene.scale.width/2, scene.scale.height - 32, 'player', 0);
@@ -34,7 +34,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Fire projectile when space is pressed
     Shoot() {
-        let emitted = this.physics.add.sprite(this.x, this.y - 50, "bullets", 1);
+        const emitted = this.physics.add.sprite(this.x, this.y - 50, "bullets", 1);
         emitted.setScale(1.5); // Scale projectiles
         
         // Set projectile hitbox size

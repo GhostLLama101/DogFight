@@ -1,5 +1,6 @@
+import Player from "../objects/player"; // Adjust the path if necessary
 
-class GameScene extends Phaser.Scene {
+export default class GameScene extends Phaser.Scene {
     constructor() {
         super("Sprite");
         this.startX = 400; // Default X position
@@ -27,6 +28,7 @@ class GameScene extends Phaser.Scene {
     create() {
 
         const player = new Player(this);
+        this.playerSprite = player.sprite; // Reference to the player sprite
 
         // Create projectile group for collision detection
         this.projectileGroup = this.physics.add.group();
