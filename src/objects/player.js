@@ -29,7 +29,6 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     Shoot() {
         const bullet = this.scene.physics.add.sprite(this.x, this.y - 50, "bullets", 1);
         bullet.setScale(1.5); // Scale projectiles
-        bullet.setTint(0x00ff00); // Add a green tint to make it more visible
         bullet.body.setSize(14, 14);
         
         // Add to projectile group for collision detection

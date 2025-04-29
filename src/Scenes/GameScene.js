@@ -3,13 +3,11 @@ class GameScene extends Phaser.Scene {
         super("Sprite");
         this.startX = 400; // Default X position
         this.startY = 750; // Default Y position
-
-        //enemy start position
-        this.E_startX = 400;
-        this.E_startY = 100;
-
         this.lastFired = 0; // Track last fired time
         this.fireRate = 250; // Fire rate in milliseconds
+        
+        this.enemyLastFired = 0;
+        this.enemyFireRate = 2000;
     }
     
     preload() {
@@ -32,23 +30,29 @@ class GameScene extends Phaser.Scene {
 
         // Create projectile group for collision detection
         this.projectileGroup = this.physics.add.group();
-        
-        // Track emitted projectiles
         this.projectiles = [];
 
+        // Create separate group for enemy projectiles
+        this.enemyProjectileGroup = this.physics.add.group();
+        this.enemyProjectiles = [];  // Track enemy projectiles
+        
         // Create enemy group to track all enemies
         this.enemyGroup = this.physics.add.group();
         
-        // Create row of enemies
-        for(let i = 0; i < 400; i += 50 ) {
-            this.enemy = new Enemy(this);
-            this.enemy.setPosition(this.E_startX - i, this.E_startY);
-            
-            
-            // Add to enemy group
-            this.enemyGroup.add(this.enemy);
-            console.log("enemy created");
-        }
+        //enemy start position
+        this.enemyX = this.scale.width / 3;
+        this.enemyY = (this.scale.height / 10) + 100; // Adjusted Y position for enemy
+
+        // creates the initial enemy formation
+        this.enemy = new Enemy(this);
+        this.enemy.setPosition(this.enemyX, this.enemyY);
+        
+        this.enemy.Shoot();
+        // Add to enemy group
+        this.enemyGroup.add(this.enemy);
+        console.log("enemy created");
+        
+        
 
 
         // Set up keyboard input
@@ -74,6 +78,15 @@ class GameScene extends Phaser.Scene {
             this
         );
 
+        // Add collision between enemy projectiles and player
+        this.physics.add.overlap(
+            this.enemyProjectileGroup,
+            this.player,
+            this.playerHitByBullet,
+            null,
+            this
+        );
+
     }
     // Function to handle projectile hitting enemy
     hitEnemy(enemy, projectile) {
@@ -90,8 +103,14 @@ class GameScene extends Phaser.Scene {
         
     }
 
-     // Function to handle player hitting enemy
-     playerHitEnemy(enemy, player) {
+    playerHitByBullet(player, bullet) {
+        console.log("Player hit by enemy bullet!");
+        player.destroy();
+        bullet.destroy();
+    }
+
+    // Function to handle player hitting enemy
+    playerHitEnemy(enemy, player) {
         console.log("Player collided with enemy!");
         enemy.destroy();
         player.destroy();
@@ -101,6 +120,7 @@ class GameScene extends Phaser.Scene {
     update() {
         // Make sure player exists before trying to control it
         if (!this.player || !this.player.active) return;
+        
         // Handle "A" key (left movement)
         if (this.aKey.isDown) {
             this.player.MoveLeft();
@@ -111,19 +131,34 @@ class GameScene extends Phaser.Scene {
             this.player.MoveRight();
         }
 
-        // Fire projectile when space is pressed
-        // single shot if (Phaser.Input.Keyboard.JustDown(this.spaceKey))
-
         // fires full Auto
         if (this.spaceKey.isDown) {
-            // Check if enough time has passed since last fire
             if (this.time.now - this.lastFired >= this.fireRate) {
                 this.player.Shoot();
                 this.lastFired = this.time.now; // Update last fired time
             }
             
         }
-    
+
+        if (this.enemy && this.enemy.active) {
+            if (this.time.now - this.enemyLastFired >= this.enemyFireRate) {
+                this.enemy.Shoot();
+                this.enemyLastFired = this.time.now;
+            }
+        }
+
+        // Update enemy projectiles
+        for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+            if (this.enemyProjectiles[i] && this.enemyProjectiles[i].active) {
+                this.enemyProjectiles[i].y += 5; // Adjust speed as needed
+                
+                // Remove enemy projectiles that go off screen
+                if (this.enemyProjectiles[i].y > this.scale.height) {
+                    this.enemyProjectiles[i].destroy();
+                    this.enemyProjectiles.splice(i, 1);
+                }
+            }
+        }
 
         // Update projectiles
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
@@ -136,18 +171,5 @@ class GameScene extends Phaser.Scene {
                 console.log("player bullet destroyed");
             }
         }
-        
-        // for (let i = this.projectiles.length - 1; i >= 0; i--) {
-        //     // Make sure the projectile exists before updating
-        //     if (this.projectiles[i] && this.projectiles[i].active) {
-        //         this.projectiles[i].y -= this.player.p_bullet_speed;
-                
-        //         // Remove projectiles that go off screen
-        //         if (this.projectiles[i].y < 0) {
-        //             this.projectiles[i].destroy();
-        //             this.projectiles.splice(i, 1);
-        //         }
-        //     }
-        // }
     }
 }

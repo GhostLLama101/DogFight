@@ -1,7 +1,7 @@
 class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     constructor(scene) {
-        super(scene, scene.E_startX, scene.E_startY, 'player', 9);
+        super(scene, scene.enemyX, scene.enemyY, 'player', 9);
         this.scene = scene;
 
         scene.add.existing(this);
@@ -13,8 +13,12 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.body.setSize(25, 20);
     }
 
-    update() {
-
+    // Fire projectile when space is pressed
+    Shoot() {
+        const bullet = this.scene.add.sprite(this.x, this.y, 'bullets', 0); // Use appropriate frame
+        this.scene.physics.add.existing(bullet);
+        this.scene.enemyProjectileGroup.add(bullet);
+        this.scene.enemyProjectiles.push(bullet);
     }
     // Function to handle enemy movement
 }
