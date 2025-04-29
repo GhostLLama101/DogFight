@@ -12,7 +12,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.setScale(2);
         this.body.setSize(15, 15);
 
-        this.p_bullet_speed = 10; // fast bullet is 15
+        // fast bullet is 15
+        this.p_bullet_speed = 10;
         
     }
     MoveLeft(){
@@ -39,4 +40,5 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
         console.log("Bullet created at position:", bullet.x, bullet.y);
     }
+    
 }

@@ -9,8 +9,14 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
 
         //flip the sprite to face the player
         this.flipY = true;
+
         this.setScale(2);
         this.body.setSize(25, 20);
+
+        // Speed of enemy bullets
+        this.E_bullet_speed = 5; 
+        
+
     }
 
     // Fire projectile when space is pressed
@@ -20,5 +26,7 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.scene.enemyProjectileGroup.add(bullet);
         this.scene.enemyProjectiles.push(bullet);
     }
+
+    
     // Function to handle enemy movement
 }

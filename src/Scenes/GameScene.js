@@ -8,6 +8,15 @@ class GameScene extends Phaser.Scene {
         
         this.enemyLastFired = 0;
         this.enemyFireRate = 2000;
+        this.enemyFireSpeed = 5;
+        this.enemyMoveSpeed = 2; // Speed of enemy movement
+        //this.enemyMoveDirection = 1; // 1 for right, -1 for left
+        this.enemySpeeds = {
+            enemy: 2,
+            enemy1: 2,
+            enemy2: 2,
+            enemy3: 2
+        };
     }
     
     preload() {
@@ -43,18 +52,33 @@ class GameScene extends Phaser.Scene {
         this.enemyX = this.scale.width / 3;
         this.enemyY = (this.scale.height / 10) + 100; // Adjusted Y position for enemy
 
+        //_________________________________ENEMY_________________________________________//
+
+
         // creates the initial enemy formation
         this.enemy = new Enemy(this);
-        this.enemy.setPosition(this.enemyX, this.enemyY);
+        this.enemy1 = new Enemy(this);
+        this.enemy2 = new Enemy(this);
+        this.enemy3 = new Enemy(this);
+        this.enemy.setPosition(this.enemyX + 50, this.enemyY + 50);
+        this.enemy1.setPosition(this.enemyX, this.enemyY);
+        this.enemy2.setPosition(this.enemyX + 150 , this.enemyY - 50);
+        this.enemy3.setPosition(this.enemyX + 100, this.enemyY);
         
-        this.enemy.Shoot();
+       
         // Add to enemy group
         this.enemyGroup.add(this.enemy);
-        console.log("enemy created");
+        this.enemyGroup.add(this.enemy1);
+        this.enemyGroup.add(this.enemy2);
+        this.enemyGroup.add(this.enemy3);
         
         
+        // this.enemy.Shoot();
+        // this.enemy1.Shoot();
+        // this.enemy2.Shoot();
+        // this.enemy3.Shoot();
 
-
+        //_________________________________________________________________________________//
         // Set up keyboard input
         this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
@@ -88,6 +112,7 @@ class GameScene extends Phaser.Scene {
         );
 
     }
+
     // Function to handle projectile hitting enemy
     hitEnemy(enemy, projectile) {
         console.log("Enemy hit by projectile!");
@@ -117,7 +142,51 @@ class GameScene extends Phaser.Scene {
         
     }
 
+    // flyby(){
+    //     // Move the enemy twards the player
+    //     this.enemy.y -= this.enemyMoveSpeed;
+
+    //     if (this.enemy.y < this.scale.height / 10) {
+    //         this.enemy.y += this.enemyMoveSpeed; // Prevent moving out of bounds
+    //     } else {
+
+    //         this.enemy.x += this.enemyMoveSpeed;
+    //     }
+
+    // }
+    
+    flyby(){
+        // Move the enemy twards the player
+        this.enemy.y += this.enemySpeeds.enemy;
+        this.enemy1.y += this.enemySpeeds.enemy1;
+        this.enemy2.y += this.enemySpeeds.enemy2;
+        this.enemy3.y += this.enemySpeeds.enemy3;
+        
+        // Handle enemy movement bounds
+        const checkBounds = (enemy, speedKey) => {
+        if (enemy.y >= this.scale.height - 30) {
+            enemy.flipY = false;
+            this.enemySpeeds[speedKey] = -Math.abs(this.enemySpeeds[speedKey]);
+        }
+        if (enemy.y <= this.scale.height / 10) {
+            enemy.flipY = true;
+            this.enemySpeeds[speedKey] = Math.abs(this.enemySpeeds[speedKey]);
+        }
+    };
+
+        // Check bounds for each enemy
+        checkBounds(this.enemy, 'enemy');
+        checkBounds(this.enemy1, 'enemy1');
+        checkBounds(this.enemy2, 'enemy2');
+        checkBounds(this.enemy3, 'enemy3');
+    }
+
+
     update() {
+
+        this.flyby();
+        
+        
         // Make sure player exists before trying to control it
         if (!this.player || !this.player.active) return;
         
@@ -139,37 +208,29 @@ class GameScene extends Phaser.Scene {
             }
             
         }
-
-        if (this.enemy && this.enemy.active) {
-            if (this.time.now - this.enemyLastFired >= this.enemyFireRate) {
-                this.enemy.Shoot();
-                this.enemyLastFired = this.time.now;
-            }
-        }
-
-        // Update enemy projectiles
-        for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
-            if (this.enemyProjectiles[i] && this.enemyProjectiles[i].active) {
-                this.enemyProjectiles[i].y += 5; // Adjust speed as needed
-                
-                // Remove enemy projectiles that go off screen
-                if (this.enemyProjectiles[i].y > this.scale.height) {
-                    this.enemyProjectiles[i].destroy();
-                    this.enemyProjectiles.splice(i, 1);
-                }
-            }
-        }
-
         // Update projectiles
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             this.projectiles[i].y -= this.player.p_bullet_speed;
             
             // Remove projectiles that go off screen
-            if (this.projectiles[i].y < 0) {
+            if (this.projectiles[i].y < this.scale.height / 10) {
                 this.projectiles[i].destroy();
                 this.projectiles.splice(i, 1);
                 console.log("player bullet destroyed");
             }
         }
+
+        // Update enemy projectiles
+        // for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+        //     this.enemyProjectiles[i].y += this.enemyFireSpeed;
+            
+        //     // Remove projectiles that go off screen
+        //     if (this.enemyProjectiles[i].y > this.scale.height) {
+
+        //         this.enemyProjectiles[i].destroy();
+        //         this.enemyProjectiles.splice(i, 1);
+        //         console.log("enemy bullet destroyed");
+        //     }
+        // }
     }
 }
