@@ -7,22 +7,24 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         
+        
 
         // Set scale and hitbox size
         this.setScale(2);
         this.body.setSize(15, 15);
 
         // fast bullet is 15
-        this.p_bullet_speed = 10;
+        this.p_bullet_speed = 15;
+        this.playerSpeed = 7;
         
     }
     MoveLeft(){
-        this.x -= 3;
+        this.x -= this.playerSpeed;
         if (this.x <= 0) this.x = 10; // Prevent moving out of bounds
     }
     
     MoveRight(){
-        this.x += 3;
+        this.x += this.playerSpeed;
         if (this.x >= this.scene.scale.width - 30) this.x = this.scene.scale.width - 30; // Adjust for world bounds
     }
 
