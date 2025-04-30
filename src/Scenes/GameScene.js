@@ -11,7 +11,7 @@ class GameScene extends Phaser.Scene {
         this.fireRate = 250; // Fire rate in milliseconds
         
         this.enemyLastFired = 0;
-        this.enemyFireRate = 2000;
+        this.enemyFireRate = 500;
         this.enemyFireSpeed = 5;
         this.enemyMoveSpeed = 2; // Speed of enemy movement
         //this.enemyMoveDirection = 1; // 1 for right, -1 for left
@@ -142,19 +142,6 @@ class GameScene extends Phaser.Scene {
         player.destroy();
         
     }
-
-    // flyby(){
-    //     // Move the enemy twards the player
-    //     this.enemy.y -= this.enemyMoveSpeed;
-
-    //     if (this.enemy.y < this.scale.height / 10) {
-    //         this.enemy.y += this.enemyMoveSpeed; // Prevent moving out of bounds
-    //     } else {
-
-    //         this.enemy.x += this.enemyMoveSpeed;
-    //     }
-
-    // }
     
     flyby(){
         // Move the enemy twards the player
@@ -184,47 +171,50 @@ class GameScene extends Phaser.Scene {
 // this is the dive movement for the enemy
     // us the code from create path to make the dive movement
     dive() {
-        // // Create enemyShip as a follower type of sprite
-        // this.enemy3 = this.add.follower(this.curve, 10, 10, "enemyShip");
 
-        // // In the update method, when R key is pressed and runMode is activated:
-        // if(this.curve.points.length > 0) {
-        //     this.runMode = true;
-        //     this.enemy3.setPosition(this.curve.points[0].x, this.curve.points[0].y);
-        //     this.enemy3.visible = true;
-        //     this.enemy3.startFollow({
-        //         from: 0,
-        //         to: 1,
-        //         delay: 0,
-        //         duration: 2000,
-        //         ease: 'Sine.easeInOut',
-        //         repeat: -1,
-        //         yoyo: false,
-        //         rotateToPath: true,
-        //         rotationOffset: -90
-        //     });
-        // }
+        // add to check if the enemy is active
+        if (!this.enemy2.active) return;
+
+        if(this.enemy2.y < this.scale.height + 100) {
+            this.enemy2.y += this.enemyMoveSpeed * 2; // Faster downward movement
+            this.enemy2.x -= this.enemyMoveSpeed; // Move right
+            // enemy2 shoots
+            if (this.time.now - this.enemyLastFired >= this.enemyFireRate) {
+                this.enemy2.Shoot();
+                this.enemyLastFired = this.time.now;
+            }
+            console.log("enemy3 diving diagonally");
+        }
+
+        // add code to return the enemy by flying it in from the top of the screen to its original position
+
+        // Check if the enemy is off-screen
+
+        // if the enemy is back to its original position, start fly by again
     }
 
     update() {
 
         if(this.flybyActive) {
             this.flyby();
-        }
+            
+            // Only check position and increment counter if flyby is active
+            if(this.enemy3.y === 316) {
+                this.counterfordive += 1;
+                console.log("enemy3 x position: " + this.enemy3.x);
+                console.log("enemy3 y position: " + this.enemy3.y);
+                console.log("Counter for dive: " + this.counterfordive);
 
-        if(this.enemy3.y === 316) {
-            this.counterfordive += 1; // Use this.counterfordive instead
-            console.log("enemy3 x position: " + this.enemy3.x);
-            console.log("enemy3 y position: " + this.enemy3.y);
-            console.log("Counter for dive: " + this.counterfordive);
-        
-
-            if(this.counterfordive >= 3) {
-                this.counterfordive = 0;
-                this.flybyActive = false; // Stop flyby movement
-                this.dive();
+                if(this.counterfordive >= 3) {
+                    this.counterfordive = 0;
+                    this.flybyActive = false; // Stop flyby movement
+                    //this.dive();
+                }
             }
-        }  
+        } else {
+            
+            this.dive();
+        }
         
         // Make sure player exists before trying to control it
         if (!this.player || !this.player.active) return;
@@ -258,25 +248,18 @@ class GameScene extends Phaser.Scene {
                 console.log("player bullet destroyed");
             }
         }
-        // for enemy projectiles
-        // if (this.enemy2 && this.enemy2.active) {
-        //     if (this.time.now - this.enemyLastFired >= this.enemyFireRate) {
-        //         this.enemy2.Shoot();
-        //         this.enemyLastFired = this.time.now;
-        //     }
-        // }
 
-        // // Update enemy projectiles
-        // for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
-        //     if (this.enemyProjectiles[i] && this.enemyProjectiles[i].active) {
-        //         this.enemyProjectiles[i].y += 5; // Adjust speed as needed
+        // Update enemy projectiles
+        for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+            if (this.enemyProjectiles[i] && this.enemyProjectiles[i].active) {
+                this.enemyProjectiles[i].y += 5; // Adjust speed as needed
                 
-        //         // Remove enemy projectiles that go off screen
-        //         if (this.enemyProjectiles[i].y > this.scale.height) {
-        //             this.enemyProjectiles[i].destroy();
-        //             this.enemyProjectiles.splice(i, 1);
-        //         }
-        //     }
-        // }
+                // Remove enemy projectiles that go off screen
+                if (this.enemyProjectiles[i].y > this.scale.height) {
+                    this.enemyProjectiles[i].destroy();
+                    this.enemyProjectiles.splice(i, 1);
+                }
+            }
+        }
     }
 }
