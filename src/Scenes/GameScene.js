@@ -2,7 +2,7 @@ class GameScene extends Phaser.Scene {
     //points = []; // this is to make the pass for the enemy dive movement
     flybyActive;
     counterfordive = 0;
-
+    VformationFlyby;
     enemyTriggeredZone = false;
     
     constructor() {
@@ -75,8 +75,6 @@ class GameScene extends Phaser.Scene {
         this.enemy2.setPosition(this.enemyX + 100, this.enemyY-200);
         this.enemy3.setPosition(this.enemyX + 150 , this.enemyY - 250);
         
-        
-       
         // Add to enemy group
         this.enemyGroup.add(this.enemy);
         this.enemyGroup.add(this.enemy1);
@@ -265,13 +263,24 @@ class GameScene extends Phaser.Scene {
             v2enemy1: 3,
             v2enemy2: 3,
             v2enemy3: 3,
-            v3enemy1: 3,
-            v3enemy2: 3,
-            v3enemy3: 3
+            v3enemy1: 2.5,
+            v3enemy2: 2.5,
+            v3enemy3: 2.5
         };
 
     }
     vFormationFlyby() {
+
+        if (!this.v1enemy1?.active && !this.v1enemy2?.active && !this.v1enemy3?.active 
+            && !this.v2enemy1?.active && !this.v2enemy2?.active && !this.v2enemy3?.active
+            && !this.v3enemy1?.active && !this.v3enemy2?.active && !this.v3enemy3?.active) {
+            // call the next wave
+            this.currentWave = 3;
+            console.log("ended V formation flyby");
+            this.VformationFlyby = false;
+            return;
+        }
+        console.log("V formation flyby active");
         // Move the enemies in a V formation towards the player
         this.v1enemy1.y += this.enemySpeeds.v1enemy1;
         this.v1enemy2.y += this.enemySpeeds.v1enemy2;
@@ -287,14 +296,34 @@ class GameScene extends Phaser.Scene {
 
         // Check bounds for each enemy in the V formation
         const checkBounds = (enemy, speedKey) => {
-            if (enemy.y >= this.scale.height) {
-                enemy.flipY = false;
+            // Check if enemy exists and is active
+            if (!enemy || !enemy.active) return;
+        
+            if (enemy.y >= this.scale.height - 50) {  // Bottom bounce
+                enemy.flipY = false;  // Flip sprite when going up
                 this.enemySpeeds[speedKey] = -Math.abs(this.enemySpeeds[speedKey]);
             } 
-            if (enemy.y <= 10) {
-                enemy.destroy(); // Destroy the enemy if it goes off-screen
+        
+            // Destroy when going up past top boundary
+            if (enemy.y <= -100 && !enemy.flipY) {
+                console.log(`${speedKey} destroyed`);
+                enemy.destroy();
             }
         };
+
+        const tryShoot = (enemy) => {
+            if (!enemy || !enemy.active || !this.player || !this.player.active) return;
+            
+            // Random chance to shoot (adjust 0.01 to control frequency)
+            if (Math.random() < 0.1) {
+                enemy.Shoot(this.player.x, this.player.y);
+            }
+        };
+
+        // Try shooting for each enemy
+        tryShoot(this.v1enemy1);
+        tryShoot(this.v1enemy2);
+        tryShoot(this.v1enemy3);
 
         // Check bounds for each enemy in the V formation
         checkBounds(this.v1enemy1, 'v1enemy1');
@@ -308,6 +337,7 @@ class GameScene extends Phaser.Scene {
         checkBounds(this.v3enemy1, 'v3enemy1');
         checkBounds(this.v3enemy2, 'v3enemy2');
         checkBounds(this.v3enemy3, 'v3enemy3');
+        
     }
     
     // make the enemy dive down and shoot at the player
@@ -351,12 +381,17 @@ class GameScene extends Phaser.Scene {
         }
         
         if(this.currentWave === 2) {
+            // Create V formations if they don't exist yet
             if (!this.v1enemy1) {
                 this.createVFormations();
+                this.VformationFlyby = true;
+                console.log("V formation created");
             }
-            else {
+            // Always call vFormationFlyby when in wave 2
+            if(this.VformationFlyby) {
                 this.vFormationFlyby();
             }
+            
         }
         
         // Make sure player exists before trying to control it
