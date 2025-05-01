@@ -2,6 +2,8 @@ class GameScene extends Phaser.Scene {
     //points = []; // this is to make the pass for the enemy dive movement
     flybyActive;
     counterfordive = 0;
+
+    enemyTriggeredZone = false;
     
     constructor() {
         super("Sprite");
@@ -23,6 +25,7 @@ class GameScene extends Phaser.Scene {
         };
 
         this.flybyActive = true; // Flag to control flyby movement
+        this.currentWave = 1; // Track the current wave of enemies
     }
     
     preload() {
@@ -66,10 +69,12 @@ class GameScene extends Phaser.Scene {
         this.enemy1 = new Enemy(this);
         this.enemy2 = new Enemy(this);
         this.enemy3 = new Enemy(this);
-        this.enemy.setPosition(this.enemyX + 50, this.enemyY + 50);
-        this.enemy1.setPosition(this.enemyX, this.enemyY);
-        this.enemy2.setPosition(this.enemyX + 150 , this.enemyY - 50);
-        this.enemy3.setPosition(this.enemyX + 100, this.enemyY);
+
+        this.enemy.setPosition(this.enemyX + 50, this.enemyY -150);
+        this.enemy1.setPosition(this.enemyX, this.enemyY-200);
+        this.enemy2.setPosition(this.enemyX + 100, this.enemyY-200);
+        this.enemy3.setPosition(this.enemyX + 150 , this.enemyY - 250);
+        
         
        
         // Add to enemy group
@@ -85,6 +90,20 @@ class GameScene extends Phaser.Scene {
         this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
+        // Create dive trigger zone
+        this.diveTrigger = this.add.zone(this.scale.width / 2, 316, this.scale.width, 10);
+        this.physics.world.enable(this.diveTrigger); // Enable physics on the zone
+        this.diveTrigger.body.setAllowGravity(false);
+        this.diveTrigger.body.moves = false;
+        
+        // Add overlap detection between enemy3 and dive trigger
+        this.physics.add.overlap(
+            this.enemy3,
+            this.diveTrigger,
+            this.handleDiveTrigger,
+            null,
+            this
+        );
 
         // Add overlap between projectiles and enemy
         this.physics.add.overlap(
@@ -112,6 +131,21 @@ class GameScene extends Phaser.Scene {
             this
         );
 
+    }
+    handleDiveTrigger() {
+        if(!this.enemyTriggeredZone) {
+            this.counterfordive += 1;
+            this.enemyTriggeredZone = true;
+
+            console.log("enemy3 x position: " + this.enemy3.x);
+            console.log("enemy3 y position: " + this.enemy3.y);
+            console.log("Counter for dive: " + this.counterfordive);
+
+            if(this.counterfordive >= 3) {
+                this.counterfordive = 0;
+                this.flybyActive = false; // Stop flyby movement
+            }
+        }
     }
 
     // Function to handle projectile hitting enemy
@@ -143,22 +177,39 @@ class GameScene extends Phaser.Scene {
         
     }
     
-    flyby(){
+    flyby(){        
         // Move the enemy twards the player
         this.enemy.y += this.enemySpeeds.enemy;
         this.enemy1.y += this.enemySpeeds.enemy1;
         this.enemy2.y += this.enemySpeeds.enemy2;
         this.enemy3.y += this.enemySpeeds.enemy3;
         
+        
+        if (!this.enemy.active && !this.enemy1.active && !this.enemy2.active && !this.enemy3.active) {
+            // All enemies are inactive, stop the flyby movement
+            this.currentWave = 2; // Switch to V formation
+            this.flybyActive = false; // Stop flyby movement
+            console.log("All enemies are inactive, stopping flyby movement.");
+
+            return;
+        }
         // Handle enemy movement bounds
         const checkBounds = (enemy, speedKey) => {
-        if (enemy.y >= this.scale.height - 30) {
+        if (enemy.y >= this.scale.height) {
             enemy.flipY = false;
             this.enemySpeeds[speedKey] = -Math.abs(this.enemySpeeds[speedKey]);
+
+            if (enemy === this.enemy3) {
+                this.enemyTriggeredZone = false;
+            }
         }
-        if (enemy.y <= this.scale.height / 10) {
+        if (enemy.y <= 10) {
             enemy.flipY = true;
             this.enemySpeeds[speedKey] = Math.abs(this.enemySpeeds[speedKey]);
+
+            if (enemy === this.enemy3) {
+                this.enemyTriggeredZone = false;
+            }
         }
     };
 
@@ -168,19 +219,112 @@ class GameScene extends Phaser.Scene {
         checkBounds(this.enemy2, 'enemy2');
         checkBounds(this.enemy3, 'enemy3');
     }
-// this is the dive movement for the enemy
-    // us the code from create path to make the dive movement
+    createVFormations() {
+        //first V formation
+        this.v1enemy1 = new Enemy(this);
+        this.v1enemy2 = new Enemy(this);
+        this.v1enemy3 = new Enemy(this);
+
+        //Second V formation
+        this.v2enemy1 = new Enemy(this);
+        this.v2enemy2 = new Enemy(this);
+        this.v2enemy3 = new Enemy(this);
+
+
+        this.v3enemy1 = new Enemy(this);
+        this.v3enemy2 = new Enemy(this);
+        this.v3enemy3 = new Enemy(this);
+
+        this.v1enemy1.setPosition(this.scale.width/4, -50); // Lead enemy
+        this.v1enemy2.setPosition(this.scale.width/4 - 50, -100); // Left wing
+        this.v1enemy3.setPosition(this.scale.width/4 + 50, -100); // Right wing
+        
+        // Position second V formation
+        this.v2enemy1.setPosition(this.scale.width * 3/4, -150); // Lead enemy
+        this.v2enemy2.setPosition(this.scale.width * 3/4 - 50, -200); // Left wing
+        this.v2enemy3.setPosition(this.scale.width * 3/4 + 50, -200); // Right wing
+        
+        this.v3enemy1.setPosition(this.scale.width/2, -50); // Lead enemy
+        this.v3enemy2.setPosition(this.scale.width/2 - 50, -100); // Left wing
+        this.v3enemy3.setPosition(this.scale.width/2 + 50, -100); // Right wing
+        // Add all new enemies to the enemy group
+        this.enemyGroup.add(this.v1enemy1);
+        this.enemyGroup.add(this.v1enemy2);
+        this.enemyGroup.add(this.v1enemy3);
+        this.enemyGroup.add(this.v2enemy1);
+        this.enemyGroup.add(this.v2enemy2);
+        this.enemyGroup.add(this.v2enemy3);
+        this.enemyGroup.add(this.v3enemy1);
+        this.enemyGroup.add(this.v3enemy2);
+        this.enemyGroup.add(this.v3enemy3);
+
+        this.enemySpeeds = {
+            v1enemy1: 3,
+            v1enemy2: 3,
+            v1enemy3: 3,
+            v2enemy1: 3,
+            v2enemy2: 3,
+            v2enemy3: 3,
+            v3enemy1: 3,
+            v3enemy2: 3,
+            v3enemy3: 3
+        };
+
+    }
+    vFormationFlyby() {
+        // Move the enemies in a V formation towards the player
+        this.v1enemy1.y += this.enemySpeeds.v1enemy1;
+        this.v1enemy2.y += this.enemySpeeds.v1enemy2;
+        this.v1enemy3.y += this.enemySpeeds.v1enemy3;
+        
+        this.v2enemy1.y += this.enemySpeeds.v2enemy1;
+        this.v2enemy2.y += this.enemySpeeds.v2enemy2;
+        this.v2enemy3.y += this.enemySpeeds.v2enemy3;
+
+        this.v3enemy1.y += this.enemySpeeds.v3enemy1;
+        this.v3enemy2.y += this.enemySpeeds.v3enemy2;
+        this.v3enemy3.y += this.enemySpeeds.v3enemy3;
+
+        // Check bounds for each enemy in the V formation
+        const checkBounds = (enemy, speedKey) => {
+            if (enemy.y >= this.scale.height) {
+                enemy.flipY = false;
+                this.enemySpeeds[speedKey] = -Math.abs(this.enemySpeeds[speedKey]);
+            } 
+            if (enemy.y <= 10) {
+                enemy.destroy(); // Destroy the enemy if it goes off-screen
+            }
+        };
+
+        // Check bounds for each enemy in the V formation
+        checkBounds(this.v1enemy1, 'v1enemy1');
+        checkBounds(this.v1enemy2, 'v1enemy2');
+        checkBounds(this.v1enemy3, 'v1enemy3');
+        
+        checkBounds(this.v2enemy1, 'v2enemy1');
+        checkBounds(this.v2enemy2, 'v2enemy2');
+        checkBounds(this.v2enemy3, 'v2enemy3');
+
+        checkBounds(this.v3enemy1, 'v3enemy1');
+        checkBounds(this.v3enemy2, 'v3enemy2');
+        checkBounds(this.v3enemy3, 'v3enemy3');
+    }
+    
+    // make the enemy dive down and shoot at the player
     dive() {
 
         // add to check if the enemy is active
-        if (!this.enemy2.active) return;
+        if (!this.enemy3.active) {
+            this.flybyActive = true; 
+            return;
+        }
 
-        if(this.enemy2.y < this.scale.height + 100) {
-            this.enemy2.y += this.enemyMoveSpeed * 2; // Faster downward movement
-            this.enemy2.x -= this.enemyMoveSpeed; // Move right
-            // enemy2 shoots
+        if(this.enemy3.y < this.scale.height + 100) {
+            this.enemy3.y += this.enemyMoveSpeed * 2; 
+            this.enemy3.x -= this.enemyMoveSpeed; 
+            
             if (this.time.now - this.enemyLastFired >= this.enemyFireRate) {
-                this.enemy2.Shoot();
+                this.enemy3.Shoot();
                 this.enemyLastFired = this.time.now;
             }
             console.log("enemy3 diving diagonally");
@@ -189,31 +333,30 @@ class GameScene extends Phaser.Scene {
         // add code to return the enemy by flying it in from the top of the screen to its original position
 
         // Check if the enemy is off-screen
+        if (this.enemy3.y > this.scale.height) {
+            this.enemy3.destroy(); 
+            this.flybyActive = true; 
+        }
 
-        // if the enemy is back to its original position, start fly by again
     }
 
     update() {
 
         if(this.flybyActive) {
-            this.flyby();
-            
-            // Only check position and increment counter if flyby is active
-            if(this.enemy3.y === 316) {
-                this.counterfordive += 1;
-                console.log("enemy3 x position: " + this.enemy3.x);
-                console.log("enemy3 y position: " + this.enemy3.y);
-                console.log("Counter for dive: " + this.counterfordive);
-
-                if(this.counterfordive >= 3) {
-                    this.counterfordive = 0;
-                    this.flybyActive = false; // Stop flyby movement
-                    //this.dive();
-                }
-            }
+            if(this.currentWave === 1) {
+                this.flyby();
+            } 
         } else {
-            
             this.dive();
+        }
+        
+        if(this.currentWave === 2) {
+            if (!this.v1enemy1) {
+                this.createVFormations();
+            }
+            else {
+                this.vFormationFlyby();
+            }
         }
         
         // Make sure player exists before trying to control it
