@@ -20,7 +20,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
     MoveLeft(){
         this.x -= this.playerSpeed;
-        if (this.x <= 0) this.x = 10; // Prevent moving out of bounds
+        if (this.x <= 0) this.x = 0; // Prevent moving out of bounds
     }
     
     MoveRight(){
@@ -42,34 +42,5 @@ class Player extends Phaser.Physics.Arcade.Sprite {
 
         console.log("Bullet created at position:", bullet.x, bullet.y);
     }
-    handleInput(keys) {
-        if (keys.left.isDown) {
-            this.MoveLeft();
-        }
-        if (keys.right.isDown) {
-            this.MoveRight();
-        }
-        if (keys.space.isDown) {
-            this.tryShoot();
-        }
-    }
-
-    tryShoot() {
-        const currentTime = this.scene.time.now;
-        if (currentTime - this.lastFired >= this.fireRate) {
-            this.Shoot();
-            this.lastFired = currentTime;
-            return true;
-        }
-        return false;
-    }
-    updateProjectiles() {
-        for (let i = this.scene.projectiles.length - 1; i >= 0; i--) {
-            const bullet = this.scene.projectiles[i];
-            if (bullet.y < 0) {
-                bullet.destroy();
-                this.scene.projectiles.splice(i, 1);
-            }
-        }
-    }
+    
 }
