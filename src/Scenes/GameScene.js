@@ -315,7 +315,7 @@ class GameScene extends Phaser.Scene {
             if (!enemy || !enemy.active || !this.player || !this.player.active) return;
             
             // Random chance to shoot (adjust 0.01 to control frequency)
-            if (Math.random() < 0.1) {
+            if (Math.random() < 0.01) {
                 enemy.Shoot(this.player.x, this.player.y);
             }
         };
@@ -324,6 +324,10 @@ class GameScene extends Phaser.Scene {
         tryShoot(this.v1enemy1);
         tryShoot(this.v1enemy2);
         tryShoot(this.v1enemy3);
+
+        tryShoot(this.v2enemy1);
+        tryShoot(this.v2enemy2);
+        tryShoot(this.v2enemy3);
 
         // Check bounds for each enemy in the V formation
         checkBounds(this.v1enemy1, 'v1enemy1');

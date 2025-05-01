@@ -1,6 +1,6 @@
 class Enemy extends Phaser.Physics.Arcade.Sprite {
     // Speed of enemy bullets
-    E_bullet_speed = 5; 
+    E_bullet_speed = 3; 
     EnemySpeed = 4; // Speed of enemy movement
 
     constructor(scene) {
@@ -45,7 +45,7 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
             );
             
             // Set bullet velocity towards player
-            const speed = 300;
+            const speed = 100;
             this.scene.physics.velocityFromRotation(angle, speed, bullet.body.velocity);
         } else {
             // If no player, shoot straight down
