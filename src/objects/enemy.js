@@ -64,44 +64,5 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.x += speedX;
     }
 
-    checkBounds() {
-        if (this.y >= this.scene.scale.height - 50) {
-            this.flipY = true;
-            return 'bounce';
-        } 
     
-        if (this.y <= -50 && this.flipY) {
-            this.destroy();
-            return 'destroyed';
-        }
-        return 'inbounds';
-    }
-
-    tryShoot() {
-        if (!this.active || !this.scene.player?.active) return false;
-        
-        if (Math.random() < 0.01) {
-            this.Shoot();
-            return true;
-        }
-        return false;
-    }
-
-    updateProjectiles() {
-        for (let i = this.scene.enemyProjectiles.length - 1; i >= 0; i--) {
-            const bullet = this.scene.enemyProjectiles[i];
-            if (bullet.y > this.scene.scale.height || bullet.y < 0) {
-                bullet.destroy();
-                this.scene.enemyProjectiles.splice(i, 1);
-            }
-        }
-    }
-
-    reset(x, y) {
-        this.setPosition(x, y);
-        this.setActive(true);
-        this.setVisible(true);
-        this.body.reset(x, y);
-    }
-
 }
