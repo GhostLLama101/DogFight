@@ -7,7 +7,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         
-        
+        this.playerHealth = 100; // Set player health
 
         // Set scale and hitbox size
         this.setScale(2);
@@ -41,6 +41,15 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.scene.projectiles.push(bullet);
 
         console.log("Bullet created at position:", bullet.x, bullet.y);
+    }
+
+    HealthCheck() {
+        if (this.playerHealth <= 0) {
+            console.log("Player is dead!");
+            this.scene.gameOver = true; // Set game over state
+        } else {
+            console.log("Player health:", this.playerHealth);
+        }
     }
     
 }

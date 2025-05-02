@@ -19,6 +19,8 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
         // Track last time enemy fired
         this.lastFired = 0;
         this.fireRate = 2000; // Fire every 2 seconds
+
+        this.enemyHealth = 10; // Set enemy health
     }
 
     Shoot() {

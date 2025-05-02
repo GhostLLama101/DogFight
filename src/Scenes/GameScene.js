@@ -26,6 +26,8 @@ class GameScene extends Phaser.Scene {
 
         this.flybyActive = true; // Flag to control flyby movement
         this.currentWave = 1; // Track the current wave of enemies
+
+        this.score = 0; // Initialize score
     }
     
     preload() {
@@ -152,6 +154,8 @@ class GameScene extends Phaser.Scene {
         // Destroy the projectile when it hits
         enemy.destroy();
         projectile.destroy();
+        this.score += 10; // Increase score by 10
+        console.log("Score: " + this.score);
         
         // Remove from our tracking array
         const index = this.projectiles.indexOf(projectile);
@@ -162,17 +166,30 @@ class GameScene extends Phaser.Scene {
     }
 
     playerHitByBullet(player, bullet) {
-        console.log("Player hit by enemy bullet!");
-        player.destroy();
-        bullet.destroy();
+        player.playerHealth -= 10;
+        console.log("Player hit by enemy bullet! Health: " + player.playerHealth);
+
+        if(player.playerHealth <= 0) {
+            console.log("Player is dead!");
+            // Handle player death (e.g., show game over screen, restart game, etc.)
+            player.destroy();
+            bullet.destroy(); // Destroy the bullet
+
+        }
+        bullet.destroy(); // Destroy the bullet  
     }
 
-    // Function to handle player hitting enemy
-    playerHitEnemy(enemy, player) {
+    // Function to handle player sprite hitting enemy
+    playerHitEnemy(player, enemy) {
         console.log("Player collided with enemy!");
-        enemy.destroy();
-        player.destroy();
-        
+        console.log("Player health: " + player.playerHealth);
+        player.playerHealth -= 10; // Decrease player health
+        if(player.playerHealth <= 0) {
+            console.log("Player is dead!");
+            player.destroy();
+            enemy.destroy();
+        }
+        enemy.destroy(); // Destroy the enemy
     }
     
     flyby(){        
@@ -373,6 +390,13 @@ class GameScene extends Phaser.Scene {
         }
 
     }
+
+    endscene() {
+        // Handle game over or end of scene logic here
+        console.log("Game Over or Scene Ended");
+        this.scene.start("GameOverScene"); // Example: transition to a Game Over scene
+    }
+    
 
     update() {
 
