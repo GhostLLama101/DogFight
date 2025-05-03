@@ -1,0 +1,10 @@
+@font-face {
+    font-family: 'midFont';
+    src: url('1943-the-battle-of-midway-nes.otf') format('opentype');
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+}

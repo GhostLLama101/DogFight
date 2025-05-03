@@ -42,9 +42,35 @@ class GameScene extends Phaser.Scene {
             frameWidth: 16,
             frameHeight: 16
         });
-    }
+       
+        // const w = this.scale.width /5;
+        // const h = this.scale.height/40;
+        // this.myScore = this.add
+        //     .text(w, h, 'Score ' + this.score,{
+        //         fontFamily: 'midFont',
+        //         fontSize: '20px', 
+        //         fill: '#ffffff', 
+
+        //     })
+        //     .setOrigin(0.5);
+    
+        }
+
 
     create() {
+
+        const w = this.scale.width /5;
+        const h = this.scale.height/40;
+        this.myScore = this.add
+            .text(w, h, 'Score 0',{
+                fontFamily: 'midFont',
+                fontSize: '20px', 
+                fill: '#ffffff', 
+
+            })
+            .setOrigin(0.5);
+
+        //this.myScore.setText("Score: " + this.score);
 
         this.player = new Player(this);
 
@@ -130,6 +156,7 @@ class GameScene extends Phaser.Scene {
             null,
             this
         );
+        
 
     }
     handleDiveTrigger() {
@@ -155,8 +182,8 @@ class GameScene extends Phaser.Scene {
         enemy.destroy();
         projectile.destroy();
         this.score += 10; // Increase score by 10
-        console.log("Score: " + this.score);
-        
+        console.log("Score " + this.score);
+        this.myScore.setText("Score " + this.score);
         // Remove from our tracking array
         const index = this.projectiles.indexOf(projectile);
         if (index > -1) {
