@@ -43,26 +43,26 @@ class GameScene extends Phaser.Scene {
             frameHeight: 16
         });
        
-        // const w = this.scale.width /5;
-        // const h = this.scale.height/40;
-        // this.myScore = this.add
-        //     .text(w, h, 'Score ' + this.score,{
-        //         fontFamily: 'midFont',
-        //         fontSize: '20px', 
-        //         fill: '#ffffff', 
+        const w = this.scale.width /5;
+        const h = this.scale.height/40;
+        this.preloadtext = this.add
+            .text(w, h, 'Score ' + this.score,{
+                fontFamily: 'midFont',
+                fontSize: '20px', 
+                fill: '#ffffff', 
 
-        //     })
-        //     .setOrigin(0.5);
+            })
+            .setOrigin(0.5);
     
         }
 
 
     create() {
 
-        const w = this.scale.width /5;
-        const h = this.scale.height/40;
-        this.myScore = this.add
-            .text(w, h, 'Score 0',{
+        this.player = new Player(this);
+        
+        this.Player1 = this.add
+            .text(100, 20, '1Player',{
                 fontFamily: 'midFont',
                 fontSize: '20px', 
                 fill: '#ffffff', 
@@ -70,9 +70,45 @@ class GameScene extends Phaser.Scene {
             })
             .setOrigin(0.5);
 
+        this.myScore = this.add
+            .text(180, 40, '0',{
+                fontFamily: 'midFont',
+                fontSize: '20px', 
+                fill: '#ffffff', 
+                align: 'right',
+
+            })
+            .setOrigin(1,0); 
+
+        this.playerHealthText = this.add
+            .text(50, this.scale.height - 50, 'Fuel ' 
+                + this.player.playerHealth + '%',{
+                fontFamily: 'midFont',
+                fontSize: '15px', 
+                fill: '#ffffff', 
+                align: 'left',
+
+            })
+            .setOrigin(0, 1);
+
+        this.waveText = this.add
+            .text(120, this.scale.height - 30, 'Wave ' 
+                + this.currentWave,{
+                fontFamily: 'midFont',
+                fontSize: '10px', 
+                fill: '#d01a1a', 
+                align: 'right',
+
+            })
+            .setOrigin(1, 1);
+
+        this.preloadtext.destroy(); // Destroy the preload text after creating the score text
+        //see if the preload text is still there
+        console.log("Preload text still there: ", this.preloadtext.active);
+
         //this.myScore.setText("Score: " + this.score);
 
-        this.player = new Player(this);
+        // this.player = new Player(this);
 
         // Create projectile group for collision detection
         this.projectileGroup = this.physics.add.group();
@@ -179,11 +215,14 @@ class GameScene extends Phaser.Scene {
     hitEnemy(enemy, projectile) {
         console.log("Enemy hit by projectile!");
         // Destroy the projectile when it hits
+
+        // subtract 10 from the enemy health
+
         enemy.destroy();
         projectile.destroy();
-        this.score += 10; // Increase score by 10
+        this.score += 100; // Increase score by 10
         console.log("Score " + this.score);
-        this.myScore.setText("Score " + this.score);
+        this.myScore.setText("" +this.score);
         // Remove from our tracking array
         const index = this.projectiles.indexOf(projectile);
         if (index > -1) {
@@ -195,7 +234,7 @@ class GameScene extends Phaser.Scene {
     playerHitByBullet(player, bullet) {
         player.playerHealth -= 10;
         console.log("Player hit by enemy bullet! Health: " + player.playerHealth);
-
+        this.playerHealthText.setText("Fuel " + player.playerHealth + "%");
         if(player.playerHealth <= 0) {
             console.log("Player is dead!");
             // Handle player death (e.g., show game over screen, restart game, etc.)
@@ -208,9 +247,10 @@ class GameScene extends Phaser.Scene {
 
     // Function to handle player sprite hitting enemy
     playerHitEnemy(player, enemy) {
+        player.playerHealth -= 10;
         console.log("Player collided with enemy!");
-        console.log("Player health: " + player.playerHealth);
-        player.playerHealth -= 10; // Decrease player health
+        console.log("Player fuel: " + player.playerHealth);
+        this.playerHealthText.setText("Fuel " + player.playerHealth + "%");
         if(player.playerHealth <= 0) {
             console.log("Player is dead!");
             player.destroy();
@@ -218,8 +258,13 @@ class GameScene extends Phaser.Scene {
         }
         enemy.destroy(); // Destroy the enemy
     }
+
+    updateCurrentWave() {
+        this.waveText.setText("Wave " + ++this.currentWave);
+        return this.currentWave;
+    }
     
-    flyby(){        
+    Wave1(){        
         // Move the enemy twards the player
         this.enemy.y += this.enemySpeeds.enemy;
         this.enemy1.y += this.enemySpeeds.enemy1;
@@ -229,7 +274,7 @@ class GameScene extends Phaser.Scene {
         
         if (!this.enemy.active && !this.enemy1.active && !this.enemy2.active && !this.enemy3.active) {
             // All enemies are inactive, stop the flyby movement
-            this.currentWave = 2; // Switch to V formation
+            this.updateCurrentWave(); // Update the wave number
             this.flybyActive = false; // Stop flyby movement
             console.log("All enemies are inactive, stopping flyby movement.");
 
@@ -261,6 +306,7 @@ class GameScene extends Phaser.Scene {
         checkBounds(this.enemy2, 'enemy2');
         checkBounds(this.enemy3, 'enemy3');
     }
+
     createVFormations() {
         //first V formation
         this.v1enemy1 = new Enemy(this);
@@ -313,15 +359,17 @@ class GameScene extends Phaser.Scene {
         };
 
     }
-    vFormationFlyby() {
+
+    Wave2() {
 
         if (!this.v1enemy1?.active && !this.v1enemy2?.active && !this.v1enemy3?.active 
             && !this.v2enemy1?.active && !this.v2enemy2?.active && !this.v2enemy3?.active
             && !this.v3enemy1?.active && !this.v3enemy2?.active && !this.v3enemy3?.active) {
             // call the next wave
-            this.currentWave = 3;
+            this.updateCurrentWave(); // Update the wave number
             console.log("ended V formation flyby");
             this.VformationFlyby = false;
+            this.Wave3();
             return;
         }
         console.log("V formation flyby active");
@@ -387,7 +435,27 @@ class GameScene extends Phaser.Scene {
         checkBounds(this.v3enemy3, 'v3enemy3');
         
     }
-    
+
+    Wave3() {
+        // Implement the third wave logic here
+        console.log("Wave 3 active");
+        // enemybomber class.
+        this.bomber1 = new enemyBomber(this);
+        this.bomber2 = new enemyBomber(this);
+
+        // create two big enemiese that fly scale to full size in left center and right center
+        this.bomber1.setPosition(this.scale.width/4, this.scale.height/2);
+        this.bomber2.setPosition(this.scale.width * 3/4, this.scale.height/2);
+
+        // add the bombers to the enemy group for collision detection
+        this.enemyGroup.add(this.bomber1);
+        this.enemyGroup.add(this.bomber2);
+
+        // make the enemise fly in a subtle side to side motion
+        // create a new fire patern the fires a circle of bullets around the ennemy
+        
+    }
+
     // make the enemy dive down and shoot at the player
     dive() {
 
@@ -429,7 +497,7 @@ class GameScene extends Phaser.Scene {
 
         if(this.flybyActive) {
             if(this.currentWave === 1) {
-                this.flyby();
+                this.Wave1();
             } 
         } else {
             this.dive();
@@ -444,7 +512,7 @@ class GameScene extends Phaser.Scene {
             }
             // Always call vFormationFlyby when in wave 2
             if(this.VformationFlyby) {
-                this.vFormationFlyby();
+                this.Wave2();
             }
             
         }
