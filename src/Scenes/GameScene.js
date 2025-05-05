@@ -15,8 +15,6 @@ class GameScene extends Phaser.Scene {
         this.enemyLastFired = 0;
         this.enemyFireRate = 500;
         this.enemyFireSpeed = 5;
-        this.enemyMoveSpeed = 2; // Speed of enemy movement
-        //this.enemyMoveDirection = 1; // 1 for right, -1 for left
         this.enemySpeeds = {
             enemy: 4,
             enemy1: 4,
@@ -24,10 +22,13 @@ class GameScene extends Phaser.Scene {
             enemy3: 4
         };
 
-        this.flybyActive = true; // Flag to control flyby movement
-        this.currentWave = 1; // Track the current wave of enemies
+        this.flybyActive = true; 
+        this.VformationFlyby = false; 
+        this.wave3Initialized = false; 
+        this.wave3Active = false;
 
-        this.score = 0; // Initialize score
+        this.score = 0; 
+        this.currentWave = 1;
     }
     
     preload() {
@@ -307,6 +308,31 @@ class GameScene extends Phaser.Scene {
         checkBounds(this.enemy3, 'enemy3');
     }
 
+    dive() {
+        if (!this.enemy3.active) {
+            this.flybyActive = true; 
+            return;
+        }
+
+        if(this.enemy3.y < this.scale.height + 100) {
+            this.enemy3.y += this.enemyMoveSpeed * 2; 
+            this.enemy3.x -= this.enemyMoveSpeed; 
+            
+            if (this.time.now - this.enemyLastFired >= this.enemyFireRate) {
+                this.enemy3.Shoot();
+                this.enemyLastFired = this.time.now;
+            }
+            console.log("enemy3 diving diagonally");
+        }
+
+ 
+        if (this.enemy3.y > this.scale.height) {
+            this.enemy3.destroy(); 
+            this.flybyActive = true; 
+        }
+
+    }
+
     createVFormations() {
         //first V formation
         this.v1enemy1 = new Enemy(this);
@@ -369,7 +395,6 @@ class GameScene extends Phaser.Scene {
             this.updateCurrentWave(); // Update the wave number
             console.log("ended V formation flyby");
             this.VformationFlyby = false;
-            this.Wave3();
             return;
         }
         console.log("V formation flyby active");
@@ -435,56 +460,96 @@ class GameScene extends Phaser.Scene {
         checkBounds(this.v3enemy3, 'v3enemy3');
         
     }
-
-    Wave3() {
-        // Implement the third wave logic here
-        console.log("Wave 3 active");
+    inWave3() {
         // enemybomber class.
         this.bomber1 = new enemyBomber(this);
         this.bomber2 = new enemyBomber(this);
 
         // create two big enemiese that fly scale to full size in left center and right center
-        this.bomber1.setPosition(this.scale.width/4, this.scale.height/2);
-        this.bomber2.setPosition(this.scale.width * 3/4, this.scale.height/2);
+        this.bomber1.setPosition(this.scale.width/4, (this.scale.height/2) + 100 );
+        this.bomber2.setPosition(this.scale.width * 3/4, (this.scale.height/2) + 100 );
 
         // add the bombers to the enemy group for collision detection
         this.enemyGroup.add(this.bomber1);
         this.enemyGroup.add(this.bomber2);
 
-        // make the enemise fly in a subtle side to side motion
-        // create a new fire patern the fires a circle of bullets around the ennemy
-        
+        this.tweens.add({
+            targets: [this.bomber1, this.bomber2], 
+            scaleX: 4.5,  
+            scaleY: 4.5,  
+            duration: 3000, 
+            ease: 'Cubic', 
+            repeat: 0,
+            yoyo: false,  
+        });
+        console.log(`Bomber1 ${this.bomber1.x}, ${this.bomber1.y} Bomber2 created`);
+
+        this.bomberDirection = 1; // 1 for right, -1 for left
+        this.bomberSpeed = 0.5; 
+
+        this.wave3Active = true; 
+        this.wave3Initialized = true; 
     }
-
-    // make the enemy dive down and shoot at the player
-    dive() {
-
-        // add to check if the enemy is active
-        if (!this.enemy3.active) {
-            this.flybyActive = true; 
+    Wave3() {
+        // Implement the third wave logic here
+        console.log("Wave 3 active");
+        
+        if (!this.wave3Active) return;
+    
+        // Check if bombers still exist
+        if (!this.bomber1?.active && !this.bomber2?.active) {
+            console.log("Both bombers destroyed, ending wave 3");
+            this.wave3Active = false;
+            this.updateCurrentWave(); // Move to next wave if needed
             return;
         }
-
-        if(this.enemy3.y < this.scale.height + 100) {
-            this.enemy3.y += this.enemyMoveSpeed * 2; 
-            this.enemy3.x -= this.enemyMoveSpeed; 
+        
+        // Move bombers to target Y position first
+        const moveToTargetY = () => {
+            let allAtTargetY = true;
             
-            if (this.time.now - this.enemyLastFired >= this.enemyFireRate) {
-                this.enemy3.Shoot();
-                this.enemyLastFired = this.time.now;
+            if (this.bomber1?.active && this.bomber1.y > 316) {
+                this.bomber1.y -= 1;
+                allAtTargetY = false;
             }
-            console.log("enemy3 diving diagonally");
+            
+            if (this.bomber2?.active && this.bomber2.y > 316) {
+                this.bomber2.y -= 1;
+                allAtTargetY = false;
+            }
+            
+            return allAtTargetY;
+        };
+        
+        // If bombers haven't reached target Y position, move them there 
+        if (!moveToTargetY()) {
+            return; 
         }
-
-        // add code to return the enemy by flying it in from the top of the screen to its original position
-
-        // Check if the enemy is off-screen
-        if (this.enemy3.y > this.scale.height) {
-            this.enemy3.destroy(); 
-            this.flybyActive = true; 
+        
+        // Check if either bomber hits screen edge
+        let hitEdge = false;
+        
+        if (this.bomber1?.active) {
+            this.bomber1.x += this.bomberSpeed * this.bomberDirection;
+            if (this.bomber1.x <= 50 || this.bomber1.x >= this.scale.width - 50) {
+                hitEdge = true;
+            }
         }
-
+        
+        if (this.bomber2?.active) {
+            this.bomber2.x += this.bomberSpeed * this.bomberDirection;
+            if (this.bomber2.x <= 50 || this.bomber2.x >= this.scale.width - 50) {
+                hitEdge = true;
+            }
+        }
+        
+        // If either bomber hit the edge, change direction for both
+        if (hitEdge) {
+            this.bomberDirection *= -1; // Reverse direction
+            console.log("Bombers changing direction");  
+        }
     }
+
 
     endscene() {
         // Handle game over or end of scene logic here
@@ -504,17 +569,26 @@ class GameScene extends Phaser.Scene {
         }
         
         if(this.currentWave === 2) {
-            // Create V formations if they don't exist yet
             if (!this.v1enemy1) {
                 this.createVFormations();
                 this.VformationFlyby = true;
                 console.log("V formation created");
             }
-            // Always call vFormationFlyby when in wave 2
+            
             if(this.VformationFlyby) {
                 this.Wave2();
             }
             
+        }
+
+        if(this.currentWave === 3) {
+            // Initialize Wave 3 once when entering wave 3
+            if (!this.wave3Initialized) {
+                this.inWave3();
+            }
+            if(this.wave3Active){
+                this.Wave3();
+            }
         }
         
         // Make sure player exists before trying to control it

@@ -20,6 +20,7 @@ class enemyBomber extends Phaser.Physics.Arcade.Sprite {
         this.fireRate = 2000; // Fire every 2 seconds
 
         this.bomberHealth = 100; // Set enemy health
+
     }
     shootSpread(){
         // shoot the bullets in a sprinkler pattern
