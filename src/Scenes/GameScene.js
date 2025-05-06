@@ -47,8 +47,8 @@ class GameScene extends Phaser.Scene {
         });
 
         this.load.spritesheet("clouds","Clouds V2.png", {
-            frameWidth: 67,
-            frameHeight: 50
+            frameWidth: 70,
+            frameHeight: 70
         });
         const w = this.scale.width /5;
         const h = this.scale.height/40;
@@ -131,7 +131,7 @@ class GameScene extends Phaser.Scene {
         this.enemyX = this.scale.width / 3;
         this.enemyY = (this.scale.height / 10) + 100; // Adjusted Y position for enemy
 
-        //_________________________________ENEMY_________________________________________//
+        //##########################################_ENEMY_######################################//
 
 
         // creates the initial enemy formation
@@ -153,9 +153,7 @@ class GameScene extends Phaser.Scene {
         this.enemyGroup.add(this.enemy1);
         this.enemyGroup.add(this.enemy2);
         this.enemyGroup.add(this.enemy3);
-        
-
-        //_________________________________________________________________________________//
+        //#######################################################################################//
         // Set up keyboard input
         this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
@@ -163,11 +161,9 @@ class GameScene extends Phaser.Scene {
 
         // Create dive trigger zone
         this.diveTrigger = this.add.zone(this.scale.width / 2, 316, this.scale.width, 10);
-        this.physics.world.enable(this.diveTrigger); // Enable physics on the zone
-        this.diveTrigger.body.setAllowGravity(false);
+        this.physics.world.enable(this.diveTrigger); 
         this.diveTrigger.body.moves = false;
         
-        // Add overlap detection between enemy3 and dive trigger
         this.physics.add.overlap(
             this.enemy3,
             this.diveTrigger,
@@ -176,7 +172,6 @@ class GameScene extends Phaser.Scene {
             this
         );
 
-        // Add overlap between projectiles and enemy
         this.physics.add.overlap(
             this.projectileGroup,
             this.enemyGroup,
@@ -192,8 +187,7 @@ class GameScene extends Phaser.Scene {
             null, 
             this
         );
-
-        // Add collision between enemy projectiles and player
+       
         this.physics.add.overlap(
             this.enemyProjectileGroup,
             this.player,
@@ -201,8 +195,6 @@ class GameScene extends Phaser.Scene {
             null,
             this
         );
-        
-
     }
     createBackgroundClouds() {
         // Create a container for clouds
@@ -305,10 +297,6 @@ class GameScene extends Phaser.Scene {
     }
     
     Wave1(){        
-        // Move the enemy twards the player
-       
-    
-        
         if (!this.enemy.active && !this.enemy1.active && 
             !this.enemy2.active && !this.enemy3.active) {
 
