@@ -6,7 +6,7 @@ class GameScene extends Phaser.Scene {
     enemyTriggeredZone = false;
     
     constructor() {
-        super("Sprite");
+        super("GameScene");
         this.startX = 400; // Default X position
         this.startY = 750; // Default Y position
         this.lastFired = 0; // Track last fired time
@@ -21,6 +21,7 @@ class GameScene extends Phaser.Scene {
             enemy2: 4,
             enemy3: 4
         };
+        this.enemyMoveSpeed = 3;
 
         this.flybyActive = true; 
         this.VformationFlyby = false; 
@@ -134,6 +135,9 @@ class GameScene extends Phaser.Scene {
         this.enemy1 = new Enemy(this);
         this.enemy2 = new Enemy(this);
         this.enemy3 = new Enemy(this);
+
+        this.enemyX = this.scale.width / 3;
+        this.enemyY = (this.scale.height / 10) + 100;
 
         this.enemy.setPosition(this.enemyX + 50, this.enemyY -150);
         this.enemy1.setPosition(this.enemyX, this.enemyY-200);
@@ -267,22 +271,28 @@ class GameScene extends Phaser.Scene {
     
     Wave1(){        
         // Move the enemy twards the player
-        this.enemy.y += this.enemySpeeds.enemy;
-        this.enemy1.y += this.enemySpeeds.enemy1;
-        this.enemy2.y += this.enemySpeeds.enemy2;
-        this.enemy3.y += this.enemySpeeds.enemy3;
+       
+    
         
-        
-        if (!this.enemy.active && !this.enemy1.active && !this.enemy2.active && !this.enemy3.active) {
-            // All enemies are inactive, stop the flyby movement
-            this.updateCurrentWave(); // Update the wave number
-            this.flybyActive = false; // Stop flyby movement
-            console.log("All enemies are inactive, stopping flyby movement.");
+        if (!this.enemy.active && !this.enemy1.active && 
+            !this.enemy2.active && !this.enemy3.active) {
 
+            this.flybyActive = false; // Stop flyby movement
+            this.VformationFlyby = true; // Stop V formation movement
+            this.updateCurrentWave(); // Update the wave number
+            //this.waveText.setText("Wave " + this.currentWave);
+            console.log("All enemies are inactive, stopping flyby movement.");
             return;
         }
+        if (this.enemy?.active) this.enemy.y += this.enemySpeeds.enemy;
+        if (this.enemy1?.active) this.enemy1.y += this.enemySpeeds.enemy1;
+        if (this.enemy2?.active) this.enemy2.y += this.enemySpeeds.enemy2;
+        if (this.enemy3?.active) this.enemy3.y += this.enemySpeeds.enemy3;
+        
         // Handle enemy movement bounds
         const checkBounds = (enemy, speedKey) => {
+        if (!enemy?.active) return;
+
         if (enemy.y >= this.scale.height) {
             enemy.flipY = false;
             this.enemySpeeds[speedKey] = -Math.abs(this.enemySpeeds[speedKey]);
@@ -392,9 +402,9 @@ class GameScene extends Phaser.Scene {
             && !this.v2enemy1?.active && !this.v2enemy2?.active && !this.v2enemy3?.active
             && !this.v3enemy1?.active && !this.v3enemy2?.active && !this.v3enemy3?.active) {
             // call the next wave
+            this.VformationFlyby = false;
             this.updateCurrentWave(); // Update the wave number
             console.log("ended V formation flyby");
-            this.VformationFlyby = false;
             return;
         }
         console.log("V formation flyby active");
@@ -552,36 +562,106 @@ class GameScene extends Phaser.Scene {
 
 
     endscene() {
-        // Handle game over or end of scene logic here
         console.log("Game Over or Scene Ended");
-        this.scene.start("GameOverScene"); // Example: transition to a Game Over scene
+        
+        // Store the final score in registry
+        this.registry.set('finalScore', this.score);
+        
+        // Clean up all physics groups
+        if (this.projectileGroup) {
+            this.projectileGroup.clear(true, true);
+            this.projectileGroup.destroy();
+        }
+        if (this.enemyProjectileGroup) {
+            this.enemyProjectileGroup.clear(true, true);
+            this.enemyProjectileGroup.destroy();
+        }
+        if (this.enemyGroup) {
+            this.enemyGroup.clear(true, true);
+            this.enemyGroup.destroy();
+        }
+        
+        // Clear tracking arrays
+        this.projectiles = [];
+        this.enemyProjectiles = [];
+        
+        // Destroy player if it exists
+        if (this.player) {
+            this.player.destroy();
+        }
+
+        // Reset enemy positions and speeds
+        this.enemyX = this.scale.width / 3;
+        this.enemyY = (this.scale.height / 10) + 100;
+        this.enemySpeeds = {
+            enemy: 4,
+            enemy1: 4,
+            enemy2: 4,
+            enemy3: 4
+        };
+        
+        // Reset game state
+        this.flybyActive = true;
+        this.VformationFlyby = false;
+        this.wave3Active = false;
+        this.wave3Initialized = false;
+        this.currentWave = 1;
+        this.score = 0;
+        this.enemyTriggeredZone = false;
+        this.counterfordive = 0;
+
+    
+        this.v1enemy1 = undefined;
+        this.v1enemy2 = undefined;
+        this.v1enemy3 = undefined;
+        this.v2enemy1 = undefined;
+        this.v2enemy2 = undefined;
+        this.v2enemy3 = undefined;
+        this.v3enemy1 = undefined;
+        this.v3enemy2 = undefined;
+        this.v3enemy3 = undefined;
+
+
+        // Remove keyboard bindings
+        this.input.keyboard.removeAllKeys(true);
+        
+        // Stop all tweens and timers
+        this.tweens.killAll();
+        this.time.removeAllEvents();
+        
+        // Switch to a new scene instead of restarting
+        this.scene.start('GameScene');
     }
     
 
     update() {
 
+
+        if (this.currentWave > 3) {
+            this.endscene();
+            return;
+        }
         if(this.flybyActive) {
             if(this.currentWave === 1) {
                 this.Wave1();
+            
             } 
-        } else {
-            this.dive();
-        }
         
-        if(this.currentWave === 2) {
+        } 
+        
+        else if(this.currentWave === 2 && !this.wave3Active) {
             if (!this.v1enemy1) {
                 this.createVFormations();
                 this.VformationFlyby = true;
                 console.log("V formation created");
             }
-            
             if(this.VformationFlyby) {
                 this.Wave2();
             }
             
         }
 
-        if(this.currentWave === 3) {
+        else if(this.currentWave === 3) {
             // Initialize Wave 3 once when entering wave 3
             if (!this.wave3Initialized) {
                 this.inWave3();
@@ -589,7 +669,16 @@ class GameScene extends Phaser.Scene {
             if(this.wave3Active){
                 this.Wave3();
             }
+        } 
+        
+        else {
+            if (!this.player || !this.player.active) {
+                this.endscene();
+            }
+            this.dive();
         }
+
+
         
         // Make sure player exists before trying to control it
         if (!this.player || !this.player.active) return;

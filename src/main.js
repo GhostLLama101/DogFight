@@ -18,7 +18,7 @@ let config = {
             debug: true
         }
     },
-    scene: [GameScene],
+    scene: [GameScene, GameOverScene],
     fps: { forceSetTimeOut: true, target: 60 }
     
 }
