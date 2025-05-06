@@ -7,8 +7,6 @@ class GameScene extends Phaser.Scene {
     
     constructor() {
         super("GameScene");
-        this.startX = 400; // Default X position
-        this.startY = 750; // Default Y position
         this.lastFired = 0; // Track last fired time
         this.fireRate = 250; // Fire rate in milliseconds
         
@@ -33,9 +31,8 @@ class GameScene extends Phaser.Scene {
     }
     
     preload() {
-        // Set the path to your assets folder
         this.load.setPath("./assets/");
-        // Load the sprite atlas
+        
         this.load.spritesheet("player","ships.png", { 
             frameWidth: 32, 
             frameHeight: 32 
@@ -50,6 +47,13 @@ class GameScene extends Phaser.Scene {
             frameWidth: 70,
             frameHeight: 70
         });
+
+        // preload the explosions 
+        this.load.spritesheet("explosion","tiles.png", {
+            frameWidth: 17,
+            frameHeight: 17
+        });
+
         const w = this.scale.width /5;
         const h = this.scale.height/40;
         this.preloadtext = this.add
@@ -60,14 +64,19 @@ class GameScene extends Phaser.Scene {
 
             })
             .setOrigin(0.5);
-    
         }
-
 
     create() {
         this.cameras.main.setBackgroundColor('#4dadde');
 
         this.createBackgroundClouds();
+
+        this.anims.create({
+            key: 'explode',
+            frames: this.anims.generateFrameNumbers('explosion', { start: 4, end: 8 }),
+            frameRate: 10,
+            repeat: 0
+        });
 
         this.player = new Player(this);
         
@@ -113,7 +122,8 @@ class GameScene extends Phaser.Scene {
             .setOrigin(1, 1);
 
         this.preloadtext.destroy(); // Destroy the preload text after creating the score text
-        //see if the preload text is still there
+       
+        //see if the preload text is still 
         console.log("Preload text still there: ", this.preloadtext.active);
 
         // Create projectile group for collision detection
@@ -131,10 +141,7 @@ class GameScene extends Phaser.Scene {
         this.enemyX = this.scale.width / 3;
         this.enemyY = (this.scale.height / 10) + 100; // Adjusted Y position for enemy
 
-        //##########################################_ENEMY_######################################//
-
-
-        // creates the initial enemy formation
+        //##########################################_ENEMY_########################################
         this.enemy = new Enemy(this);
         this.enemy1 = new Enemy(this);
         this.enemy2 = new Enemy(this);
@@ -148,13 +155,12 @@ class GameScene extends Phaser.Scene {
         this.enemy2.setPosition(this.enemyX + 100, this.enemyY-200);
         this.enemy3.setPosition(this.enemyX + 150 , this.enemyY - 250);
         
-        // Add to enemy group
         this.enemyGroup.add(this.enemy);
         this.enemyGroup.add(this.enemy1);
         this.enemyGroup.add(this.enemy2);
         this.enemyGroup.add(this.enemy3);
-        //#######################################################################################//
-        // Set up keyboard input
+        //#########################################################################################
+
         this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -243,19 +249,31 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    createExplosion(x, y, scale = 4) {
+
+        const explosion = this.add.sprite(x, y, 'explosion');
+
+        explosion.setScale(scale);
+        
+        explosion.play('explode');
+        
+        explosion.on('animationcomplete', function() {
+            explosion.destroy();
+        });
+
+        console.log("explosion test")
+    }
+
     // Function to handle projectile hitting enemy
     hitEnemy(enemy, projectile) {
-        console.log("Enemy hit by projectile!");
-        // Destroy the projectile when it hits
+        this.createExplosion(enemy.x, enemy.y);
 
         // subtract 10 from the enemy health
 
         enemy.destroy();
         projectile.destroy();
-        this.score += 100; // Increase score by 10
-        console.log("Score " + this.score);
+        this.score += 100; 
         this.myScore.setText("" +this.score);
-        // Remove from our tracking array
         const index = this.projectiles.indexOf(projectile);
         if (index > -1) {
             this.projectiles.splice(index, 1);
@@ -268,27 +286,26 @@ class GameScene extends Phaser.Scene {
         console.log("Player hit by enemy bullet! Health: " + player.playerHealth);
         this.playerHealthText.setText("Fuel " + player.playerHealth + "%");
         if(player.playerHealth <= 0) {
-            console.log("Player is dead!");
-            // Handle player death (e.g., show game over screen, restart game, etc.)
             player.destroy();
-            bullet.destroy(); // Destroy the bullet
+            bullet.destroy();
+            this.createExplosion(enemy.x,enemy.y)
 
         }
-        bullet.destroy(); // Destroy the bullet  
+        bullet.destroy(); 
     }
 
     // Function to handle player sprite hitting enemy
     playerHitEnemy(player, enemy) {
         player.playerHealth -= 10;
-        console.log("Player collided with enemy!");
-        console.log("Player fuel: " + player.playerHealth);
         this.playerHealthText.setText("Fuel " + player.playerHealth + "%");
+        
         if(player.playerHealth <= 0) {
-            console.log("Player is dead!");
             player.destroy();
             enemy.destroy();
+            this.createExplosion(player.x,player.y)
         }
-        enemy.destroy(); // Destroy the enemy
+        enemy.destroy(); 
+        this.createExplosion(enemy.x,enemy.y)
     }
 
     updateCurrentWave() {
