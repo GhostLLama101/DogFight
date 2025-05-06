@@ -40,18 +40,23 @@ class GameScene extends Phaser.Scene {
             frameWidth: 32, 
             frameHeight: 32 
         });
+        
         this.load.spritesheet("bullets","tiles.png", {
             frameWidth: 16,
             frameHeight: 16
         });
-       
+
+        this.load.spritesheet("clouds","Clouds V2.png", {
+            frameWidth: 67,
+            frameHeight: 50
+        });
         const w = this.scale.width /5;
         const h = this.scale.height/40;
         this.preloadtext = this.add
             .text(w, h, 'Score ' + this.score,{
                 fontFamily: 'midFont',
                 fontSize: '20px', 
-                fill: '#ffffff', 
+                fill: '#3f3c3c', 
 
             })
             .setOrigin(0.5);
@@ -60,6 +65,9 @@ class GameScene extends Phaser.Scene {
 
 
     create() {
+        this.cameras.main.setBackgroundColor('#4dadde');
+
+        this.createBackgroundClouds();
 
         this.player = new Player(this);
         
@@ -67,7 +75,7 @@ class GameScene extends Phaser.Scene {
             .text(100, 20, '1Player',{
                 fontFamily: 'midFont',
                 fontSize: '20px', 
-                fill: '#ffffff', 
+                fill: '#3f3c3c', 
 
             })
             .setOrigin(0.5);
@@ -76,7 +84,7 @@ class GameScene extends Phaser.Scene {
             .text(180, 40, '0',{
                 fontFamily: 'midFont',
                 fontSize: '20px', 
-                fill: '#ffffff', 
+                fill: '#3f3c3c', 
                 align: 'right',
 
             })
@@ -87,7 +95,7 @@ class GameScene extends Phaser.Scene {
                 + this.player.playerHealth + '%',{
                 fontFamily: 'midFont',
                 fontSize: '15px', 
-                fill: '#ffffff', 
+                fill: '#3f3c3c', 
                 align: 'left',
 
             })
@@ -107,10 +115,6 @@ class GameScene extends Phaser.Scene {
         this.preloadtext.destroy(); // Destroy the preload text after creating the score text
         //see if the preload text is still there
         console.log("Preload text still there: ", this.preloadtext.active);
-
-        //this.myScore.setText("Score: " + this.score);
-
-        // this.player = new Player(this);
 
         // Create projectile group for collision detection
         this.projectileGroup = this.physics.add.group();
@@ -199,6 +203,37 @@ class GameScene extends Phaser.Scene {
         );
         
 
+    }
+    createBackgroundClouds() {
+        // Create a container for clouds
+        this.cloudsContainer = this.add.container(0, 0);
+        
+        // Create a group of clouds with different sizes and speeds
+        this.clouds = [];
+        
+        for (let i = 0; i < 20; i++) {
+            const x = Phaser.Math.Between(0, this.scale.width);
+            const y = Phaser.Math.Between(0, this.scale.height);
+            const scale = Phaser.Math.FloatBetween(1.0, 5.0);
+            const speed = Phaser.Math.FloatBetween(0.2, 0.8);
+            const frame = Phaser.Math.Between(0, 5); // Assuming there are frames 0-5 in the spritesheet
+            
+            // Create cloud sprite
+            const cloud = this.add.sprite(x, y, "clouds", frame);
+            cloud.setScale(scale);
+            cloud.setAlpha(0.9); // Make clouds slightly transparent
+            
+            // Add cloud to the container
+            this.cloudsContainer.add(cloud);
+            
+            this.clouds.push({
+                obj: cloud,
+                speed: speed
+            });
+        }
+        
+        // Set the container depth to -5 (behind all other elements)
+        this.cloudsContainer.setDepth(-5);
     }
     handleDiveTrigger() {
         if(!this.enemyTriggeredZone) {
@@ -564,9 +599,6 @@ class GameScene extends Phaser.Scene {
     endscene() {
         console.log("Game Over or Scene Ended");
         
-        // Store the final score in registry
-        this.registry.set('finalScore', this.score);
-        
         // Clean up all physics groups
         if (this.projectileGroup) {
             this.projectileGroup.clear(true, true);
@@ -589,7 +621,7 @@ class GameScene extends Phaser.Scene {
         if (this.player) {
             this.player.destroy();
         }
-
+    
         // Reset enemy positions and speeds
         this.enemyX = this.scale.width / 3;
         this.enemyY = (this.scale.height / 10) + 100;
@@ -609,8 +641,8 @@ class GameScene extends Phaser.Scene {
         this.score = 0;
         this.enemyTriggeredZone = false;
         this.counterfordive = 0;
-
     
+        // Clear enemy references
         this.v1enemy1 = undefined;
         this.v1enemy2 = undefined;
         this.v1enemy3 = undefined;
@@ -620,8 +652,7 @@ class GameScene extends Phaser.Scene {
         this.v3enemy1 = undefined;
         this.v3enemy2 = undefined;
         this.v3enemy3 = undefined;
-
-
+    
         // Remove keyboard bindings
         this.input.keyboard.removeAllKeys(true);
         
@@ -629,13 +660,23 @@ class GameScene extends Phaser.Scene {
         this.tweens.killAll();
         this.time.removeAllEvents();
         
-        // Switch to a new scene instead of restarting
-        this.scene.start('GameScene');
+        // Transition to TitleScene instead of restarting
+        this.scene.start('TitleScene');
     }
     
 
     update() {
 
+        if (this.clouds) {
+            for (const cloud of this.clouds) {
+                cloud.obj.y += cloud.speed;
+                
+                if (cloud.obj.y > this.scale.height + 30) {
+                    cloud.obj.y = -50; 
+                    cloud.obj.x = Phaser.Math.Between(0, this.scale.width);
+                }
+            }
+        }
 
         if (this.currentWave > 3) {
             this.endscene();

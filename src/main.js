@@ -15,11 +15,15 @@ let config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 0 },
-            debug: true
+            debug: false
         }
     },
-    scene: [GameScene, GameOverScene],
-    fps: { forceSetTimeOut: true, target: 60 }
+    scene: [TitleScene,GameScene],
+    fps: { forceSetTimeOut: true, target: 60 },
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    }
     
 }
 
