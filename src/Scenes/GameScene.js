@@ -64,6 +64,8 @@ class GameScene extends Phaser.Scene {
 
             })
             .setOrigin(0.5);
+
+        this.load.audio("playerSoundFlying", "g05-01_b-24-2-engine-prop-revs-and-idles-50766.mp3");
         }
 
     create() {
@@ -71,12 +73,29 @@ class GameScene extends Phaser.Scene {
 
         this.createBackgroundClouds();
 
+        
+        this.playerFlyingSound = this.sound.add('playerSoundFlying');
+        
+        this.playerFlyingSound.play({
+            mute: false,
+            volume: 0.3,
+            rate: 1,
+            detune: 0,
+            seek: 30,
+            loop: true,
+            delay: 0,
+
+        });
+        
+
         this.anims.create({
             key: 'explode',
             frames: this.anims.generateFrameNumbers('explosion', { start: 4, end: 8 }),
             frameRate: 10,
             repeat: 0
         });
+
+        
 
         this.player = new Player(this);
         
@@ -288,7 +307,8 @@ class GameScene extends Phaser.Scene {
         if(player.playerHealth <= 0) {
             player.destroy();
             bullet.destroy();
-            this.createExplosion(enemy.x,enemy.y)
+            this.createExplosion(player.x,player.y)
+            this.playerFlyingSound.stop();
 
         }
         bullet.destroy(); 
@@ -303,6 +323,7 @@ class GameScene extends Phaser.Scene {
             player.destroy();
             enemy.destroy();
             this.createExplosion(player.x,player.y)
+            this.playerFlyingSound.stop();
         }
         enemy.destroy(); 
         this.createExplosion(enemy.x,enemy.y)
@@ -437,7 +458,6 @@ class GameScene extends Phaser.Scene {
     }
 
     Wave2() {
-
         if (!this.v1enemy1?.active && !this.v1enemy2?.active && !this.v1enemy3?.active 
             && !this.v2enemy1?.active && !this.v2enemy2?.active && !this.v2enemy3?.active
             && !this.v3enemy1?.active && !this.v3enemy2?.active && !this.v3enemy3?.active) {
@@ -510,6 +530,7 @@ class GameScene extends Phaser.Scene {
         checkBounds(this.v3enemy3, 'v3enemy3');
         
     }
+
     inWave3() {
         // enemybomber class.
         this.bomber1 = new enemyBomber(this);
@@ -540,6 +561,7 @@ class GameScene extends Phaser.Scene {
         this.wave3Active = true; 
         this.wave3Initialized = true; 
     }
+
     Wave3() {
         // Implement the third wave logic here
         console.log("Wave 3 active");
@@ -600,10 +622,11 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-
     endscene() {
         console.log("Game Over or Scene Ended");
-        
+        if (this.playerFlyingSound) {
+            this.playerFlyingSound.stop();
+        }
         // Clean up all physics groups
         if (this.projectileGroup) {
             this.projectileGroup.clear(true, true);
@@ -690,9 +713,7 @@ class GameScene extends Phaser.Scene {
         if(this.flybyActive) {
             if(this.currentWave === 1) {
                 this.Wave1();
-            
             } 
-        
         } 
         
         else if(this.currentWave === 2 && !this.wave3Active) {
@@ -704,7 +725,6 @@ class GameScene extends Phaser.Scene {
             if(this.VformationFlyby) {
                 this.Wave2();
             }
-            
         }
 
         else if(this.currentWave === 3) {
