@@ -20,26 +20,30 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     }
     MoveLeft(){
         this.x -= this.playerSpeed;
-        if (this.x <= 0) this.x = 0; // Prevent moving out of bounds
+        if (this.x <= 0) this.x = 0;
     }
     
     MoveRight(){
         this.x += this.playerSpeed;
-        if (this.x >= this.scene.scale.width - 30) this.x = this.scene.scale.width - 30; // Adjust for world bounds
+        if (this.x >= this.scene.scale.width - 30) this.x = this.scene.scale.width - 30; 
     }
 
-    // Fire projectile when space is pressed
     Shoot() {
         const bullet = this.scene.physics.add.sprite(this.x, this.y - 50, "bullets", 1);
-        bullet.setScale(1.5); // Scale projectiles
+        bullet.setScale(1.5); 
         bullet.body.setSize(14, 14);
-        
-        // Add to projectile group for collision detection
         this.scene.projectileGroup.add(bullet);
-        
-        // Store reference in our array for movement updates
         this.scene.projectiles.push(bullet);
 
+        this.scene.sound.play('bulletSound', { 
+            mute: false,
+            volume: 0.3,
+            rate: 1,
+            detune: 0,
+            seek: 1.2,
+            loop: false,
+            delay: 0,
+         });
         console.log("Bullet created at position:", bullet.x, bullet.y);
     }
 

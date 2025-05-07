@@ -66,7 +66,8 @@ class GameScene extends Phaser.Scene {
             .setOrigin(0.5);
 
         this.load.audio("playerSoundFlying", "g05-01_b-24-2-engine-prop-revs-and-idles-50766.mp3");
-        }
+        this.load.audio("bulletSound", "gun-shots-230534.mp3");
+    }
 
     create() {
         this.cameras.main.setBackgroundColor('#4dadde');

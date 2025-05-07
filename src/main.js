@@ -18,7 +18,7 @@ let config = {
             debug: false
         }
     },
-    scene: [TitleScene,GameScene],
+    scene: [TitleScene,GameScene,GameOver],
     fps: { forceSetTimeOut: true, target: 60 },
     scale: {
         mode: Phaser.Scale.FIT,
