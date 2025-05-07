@@ -1,5 +1,4 @@
 class GameScene extends Phaser.Scene {
-    //points = []; // this is to make the pass for the enemy dive movement
     flybyActive;
     counterfordive = 0;
     VformationFlyby;
@@ -7,8 +6,11 @@ class GameScene extends Phaser.Scene {
     
     constructor() {
         super("GameScene");
-        this.lastFired = 0; // Track last fired time
-        this.fireRate = 250; // Fire rate in milliseconds
+        this.score = 0;
+        this.currentWave = 1;
+        
+        this.lastFired = 0;
+        this.fireRate = 250;
         
         this.enemyLastFired = 0;
         this.enemyFireRate = 500;
@@ -25,9 +27,10 @@ class GameScene extends Phaser.Scene {
         this.VformationFlyby = false; 
         this.wave3Initialized = false; 
         this.wave3Active = false;
-
-        this.score = 0; 
-        this.currentWave = 1;
+        
+        // Initialize arrays here
+        this.projectiles = [];
+        this.enemyProjectiles = [];
     }
     
     preload() {
@@ -70,10 +73,13 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
+
+        this.score = 0;
+        console.log("GameScene create - score reset to:", this.score);
+
         this.cameras.main.setBackgroundColor('#4dadde');
 
         this.createBackgroundClouds();
-
         
         this.playerFlyingSound = this.sound.add('playerSoundFlying');
         
@@ -311,6 +317,15 @@ class GameScene extends Phaser.Scene {
             this.createExplosion(player.x,player.y)
             this.playerFlyingSound.stop();
 
+            // Store the score for the GameOver scene to display
+            this.registry.set('finalScore', this.score);
+            console.log("Setting finalScore in registry to:", this.score);
+            
+            // Wait a moment before transitioning to allow explosion to show
+            this.time.delayedCall(1000, () => {
+                this.endscene(true);
+            });
+
         }
         bullet.destroy(); 
     }
@@ -325,6 +340,16 @@ class GameScene extends Phaser.Scene {
             enemy.destroy();
             this.createExplosion(player.x,player.y)
             this.playerFlyingSound.stop();
+
+            // Store the score for the GameOver scene to display
+            this.registry.set('finalScore', this.score);
+            console.log("Setting finalScore in registry to:", this.score);
+            
+            // Wait a moment before transitioning to allow explosion to show
+            this.time.delayedCall(1000, () => {
+                this.endscene(true);
+
+            });
         }
         enemy.destroy(); 
         this.createExplosion(enemy.x,enemy.y)
@@ -623,11 +648,18 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    endscene() {
-        console.log("Game Over or Scene Ended");
+    endscene(gameOver = false) {
+        console.log("Scene Ended");
         if (this.playerFlyingSound) {
             this.playerFlyingSound.stop();
         }
+
+        // Store final score in registry before ending
+        if (gameOver) {
+            this.registry.set('finalScore', this.score);
+            console.log("Stored finalScore in registry:", this.score);
+        }
+        
         // Clean up all physics groups
         if (this.projectileGroup) {
             this.projectileGroup.clear(true, true);
@@ -641,10 +673,6 @@ class GameScene extends Phaser.Scene {
             this.enemyGroup.clear(true, true);
             this.enemyGroup.destroy();
         }
-        
-        // Clear tracking arrays
-        this.projectiles = [];
-        this.enemyProjectiles = [];
         
         // Destroy player if it exists
         if (this.player) {
@@ -667,11 +695,14 @@ class GameScene extends Phaser.Scene {
         this.wave3Active = false;
         this.wave3Initialized = false;
         this.currentWave = 1;
-        this.score = 0;
+
+        // Clear tracking arrays
+        this.projectiles = [];
+        this.enemyProjectiles = [];
+
         this.enemyTriggeredZone = false;
         this.counterfordive = 0;
     
-        // Clear enemy references
         this.v1enemy1 = undefined;
         this.v1enemy2 = undefined;
         this.v1enemy3 = undefined;
@@ -682,15 +713,16 @@ class GameScene extends Phaser.Scene {
         this.v3enemy2 = undefined;
         this.v3enemy3 = undefined;
     
-        // Remove keyboard bindings
         this.input.keyboard.removeAllKeys(true);
         
-        // Stop all tweens and timers
         this.tweens.killAll();
         this.time.removeAllEvents();
-        
-        // Transition to TitleScene instead of restarting
-        this.scene.start('TitleScene');
+
+        if (gameOver) {
+            this.scene.start('gameOver');
+        } else {
+            this.scene.start('TitleScene');
+        }
     }
     
 
