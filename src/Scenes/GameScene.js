@@ -73,16 +73,10 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-
         this.score = 0;
-        console.log("GameScene create - score reset to:", this.score);
-
         this.cameras.main.setBackgroundColor('#4dadde');
-
         this.createBackgroundClouds();
-        
         this.playerFlyingSound = this.sound.add('playerSoundFlying');
-        
         this.playerFlyingSound.play({
             mute: false,
             volume: 0.3,
@@ -94,15 +88,12 @@ class GameScene extends Phaser.Scene {
 
         });
         
-
         this.anims.create({
             key: 'explode',
             frames: this.anims.generateFrameNumbers('explosion', { start: 4, end: 8 }),
             frameRate: 10,
             repeat: 0
         });
-
-        
 
         this.player = new Player(this);
         
@@ -263,11 +254,6 @@ class GameScene extends Phaser.Scene {
         if(!this.enemyTriggeredZone) {
             this.counterfordive += 1;
             this.enemyTriggeredZone = true;
-
-            console.log("enemy3 x position: " + this.enemy3.x);
-            console.log("enemy3 y position: " + this.enemy3.y);
-            console.log("Counter for dive: " + this.counterfordive);
-
             if(this.counterfordive >= 3) {
                 this.counterfordive = 0;
                 this.flybyActive = false; // Stop flyby movement
@@ -276,56 +262,58 @@ class GameScene extends Phaser.Scene {
     }
 
     createExplosion(x, y, scale = 4) {
-
         const explosion = this.add.sprite(x, y, 'explosion');
-
         explosion.setScale(scale);
-        
         explosion.play('explode');
-        
         explosion.on('animationcomplete', function() {
             explosion.destroy();
         });
-
-        console.log("explosion test")
     }
 
     // Function to handle projectile hitting enemy
-    hitEnemy(enemy, projectile) {
-        this.createExplosion(enemy.x, enemy.y);
-
-        // subtract 10 from the enemy health
-
-        enemy.destroy();
+    hitEnemy(projectile, enemy) {
+        
+        // Destroy the projectile
         projectile.destroy();
-        this.score += 100; 
-        this.myScore.setText("" +this.score);
         const index = this.projectiles.indexOf(projectile);
         if (index > -1) {
             this.projectiles.splice(index, 1);
         }
-        
+    
+        // Make sure enemy has takeDamage method before calling it
+        //if (enemy && typeof enemy.takeDamage === 'function') {
+            const bulletDamage = 100;
+            const enemyDestroyed = enemy.takeDamage(bulletDamage);
+            
+            // Create explosion effect
+            this.createExplosion(enemy.x, enemy.y);
+            
+            if(enemyDestroyed) {
+                this.createExplosion(enemy.x, enemy.y);
+                let scoreValue = 100;
+                if (enemy instanceof enemyBomber) {
+                    scoreValue = 500;
+                }
+                
+                this.score += scoreValue; 
+                this.myScore.setText("" + this.score);
+                enemy.destroy();
+            }
     }
 
     playerHitByBullet(player, bullet) {
         player.playerHealth -= 10;
-        console.log("Player hit by enemy bullet! Health: " + player.playerHealth);
         this.playerHealthText.setText("Fuel " + player.playerHealth + "%");
+
         if(player.playerHealth <= 0) {
             player.destroy();
             bullet.destroy();
             this.createExplosion(player.x,player.y)
             this.playerFlyingSound.stop();
-
-            // Store the score for the GameOver scene to display
-            this.registry.set('finalScore', this.score);
-            console.log("Setting finalScore in registry to:", this.score);
-            
-            // Wait a moment before transitioning to allow explosion to show
+            this.registry.set('finalScore', this.score);            
             this.time.delayedCall(1000, () => {
                 this.endscene(true);
             });
-
         }
         bullet.destroy(); 
     }
@@ -334,25 +322,30 @@ class GameScene extends Phaser.Scene {
     playerHitEnemy(player, enemy) {
         player.playerHealth -= 10;
         this.playerHealthText.setText("Fuel " + player.playerHealth + "%");
-        
+        const collisionDamage = 50;
+        const enemyDestroyed = enemy.takeDamage(collisionDamage);        
+        this.createExplosion(enemy.x, enemy.y, 3);
+
         if(player.playerHealth <= 0) {
             player.destroy();
-            enemy.destroy();
-            this.createExplosion(player.x,player.y)
-            this.playerFlyingSound.stop();
-
-            // Store the score for the GameOver scene to display
+            this.createExplosion(player.x, player.y);
+            this.playerFlyingSound.stop();    
             this.registry.set('finalScore', this.score);
-            console.log("Setting finalScore in registry to:", this.score);
-            
-            // Wait a moment before transitioning to allow explosion to show
             this.time.delayedCall(1000, () => {
                 this.endscene(true);
-
             });
         }
-        enemy.destroy(); 
-        this.createExplosion(enemy.x,enemy.y)
+        if (enemyDestroyed) {
+            let scoreValue = 100;
+            if (enemy instanceof enemyBomber) {
+                scoreValue = 300;
+            }
+            
+            this.score += scoreValue;
+            this.myScore.setText("" + this.score);            
+            enemy.destroy(); 
+            this.createExplosion(enemy.x, enemy.y, 4);
+        }
     }
 
     updateCurrentWave() {
@@ -367,7 +360,6 @@ class GameScene extends Phaser.Scene {
             this.flybyActive = false; // Stop flyby movement
             this.VformationFlyby = true; // Stop V formation movement
             this.updateCurrentWave(); // Update the wave number
-            //this.waveText.setText("Wave " + this.currentWave);
             console.log("All enemies are inactive, stopping flyby movement.");
             return;
         }
@@ -419,9 +411,7 @@ class GameScene extends Phaser.Scene {
                 this.enemy3.Shoot();
                 this.enemyLastFired = this.time.now;
             }
-            console.log("enemy3 diving diagonally");
         }
-
  
         if (this.enemy3.y > this.scale.height) {
             this.enemy3.destroy(); 
@@ -490,10 +480,8 @@ class GameScene extends Phaser.Scene {
             // call the next wave
             this.VformationFlyby = false;
             this.updateCurrentWave(); // Update the wave number
-            console.log("ended V formation flyby");
             return;
         }
-        console.log("V formation flyby active");
         // Move the enemies in a V formation towards the player
         this.v1enemy1.y += this.enemySpeeds.v1enemy1;
         this.v1enemy2.y += this.enemySpeeds.v1enemy2;
@@ -519,7 +507,6 @@ class GameScene extends Phaser.Scene {
         
             // Destroy when going up past top boundary
             if (enemy.y <= -100 && !enemy.flipY) {
-                console.log(`${speedKey} destroyed`);
                 enemy.destroy();
             }
         };
@@ -579,7 +566,7 @@ class GameScene extends Phaser.Scene {
             repeat: 0,
             yoyo: false,  
         });
-        console.log(`Bomber1 ${this.bomber1.x}, ${this.bomber1.y} Bomber2 created`);
+
 
         this.bomberDirection = 1; // 1 for right, -1 for left
         this.bomberSpeed = 0.5; 
@@ -589,14 +576,12 @@ class GameScene extends Phaser.Scene {
     }
 
     Wave3() {
-        // Implement the third wave logic here
-        console.log("Wave 3 active");
         
         if (!this.wave3Active) return;
     
         // Check if bombers still exist
         if (!this.bomber1?.active && !this.bomber2?.active) {
-            console.log("Both bombers destroyed, ending wave 3");
+
             this.wave3Active = false;
             this.updateCurrentWave(); // Move to next wave if needed
             return;
@@ -643,9 +628,20 @@ class GameScene extends Phaser.Scene {
         
         // If either bomber hit the edge, change direction for both
         if (hitEdge) {
-            this.bomberDirection *= -1; // Reverse direction
-            console.log("Bombers changing direction");  
+            this.bomberDirection *= -1; // Reverse direction 
         }
+
+        const bomberShoot = (enemy) => {
+            if (!enemy || !enemy.active || !this.player || !this.player.active) return;
+            
+            // Random chance to shoot (adjust 0.01 to control frequency)
+            if (Math.random() < 0.10) {
+                enemy.Shoot(this.player.x, this.player.y);
+            }
+        };
+
+        bomberShoot(this.bomber1);
+        bomberShoot(this.bomber2);
     }
 
     endscene(gameOver = false) {
@@ -657,7 +653,6 @@ class GameScene extends Phaser.Scene {
         // Store final score in registry before ending
         if (gameOver) {
             this.registry.set('finalScore', this.score);
-            console.log("Stored finalScore in registry:", this.score);
         }
         
         // Clean up all physics groups
@@ -808,7 +803,7 @@ class GameScene extends Phaser.Scene {
             if (this.projectiles[i].y < this.scale.height / 10) {
                 this.projectiles[i].destroy();
                 this.projectiles.splice(i, 1);
-                console.log("player bullet destroyed");
+
             }
         }
 

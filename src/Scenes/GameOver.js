@@ -15,7 +15,7 @@ class GameOver extends Phaser.Scene {
         let finalScore = this.registry.get('finalScore') || 0;
     
         // Add score display
-        this.add.text(this.scale.width / 2, 380, 'Score: ' + finalScore, {
+        this.add.text(this.scale.width / 2, 340, 'Score: ' + finalScore, {
             fontFamily: 'midFont',
             fontSize: '24px',
             fill: '#ffffff'
@@ -27,23 +27,25 @@ class GameOver extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5);
 
-        this.add.text(this.scale.width / 2, 430, 'Author: SD', {
+        const rightMargin = this.scale.width - 400; // 20px from the right edge
+        
+        this.add.text(rightMargin, 450, 'Author by: SD', {
             fontFamily: 'midFont',
             fontSize: '10px',
             fill: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0, 1);
 
-        this.add.text(this.scale.width / 2, 450, 'Assets by: Kenny \n \t \t \t \t \tArtisan', {
+        this.add.text(rightMargin, 475, 'Assets by: Kenny and Artisan', {
             fontFamily: 'midFont',
             fontSize: '10px',
             fill: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0, 1);
 
-        this.add.text(this.scale.width / 2, 475, 'Sound by: Pixabay', {
+        this.add.text(rightMargin, 500, 'Sounds by: Pixabay', {
             fontFamily: 'midFont',
             fontSize: '10px',
             fill: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0, 1);
 
         const startText = this.add.text(this.scale.width / 2, 550, 'Press SPACE to Restart', {
             fontFamily: 'midFont',

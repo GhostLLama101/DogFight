@@ -44,7 +44,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
             loop: false,
             delay: 0,
          });
-        console.log("Bullet created at position:", bullet.x, bullet.y);
+        // console.log("Bullet created at position:", bullet.x, bullet.y);
     }
 
     HealthCheck() {

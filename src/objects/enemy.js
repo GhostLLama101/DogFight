@@ -3,7 +3,7 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
     E_bullet_speed = 3; 
     EnemySpeed = 4; // Speed of enemy movement
 
-    constructor(scene) {
+    constructor(scene, health = 100) {
         super(scene, scene.enemyX, scene.enemyY, 'player', 9);
         this.scene = scene;
 
@@ -20,21 +20,22 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.lastFired = 0;
         this.fireRate = 2000; // Fire every 2 seconds
 
-        this.enemyHealth = 10; // Set enemy health
+        this.maxHealth = health;
+        this.currentHealth = health;
     }
-
+    takeDamage(Amount){
+        this.currentHealth -=  Amount;
+        if(this.currentHealth <= 0 ) {
+            return true;
+        }
+        return false;
+    }
     Shoot() {
         const currentTime = this.scene.time.now;
-        
-        // Check fire rate
         if (currentTime - this.lastFired < this.fireRate) return;
-        
-        // Create bullet
         const bullet = this.scene.physics.add.sprite(this.x, this.y + 20, 'bullets', 2);
         bullet.setScale(1.5);
         bullet.body.setSize(14, 14);
-        
-        // Add to enemy projectile group
         this.scene.enemyProjectileGroup.add(bullet);
         
         // If player exists, calculate angle to player
@@ -45,19 +46,12 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
                 this.scene.player.x, 
                 this.scene.player.y
             );
-            
-            // Set bullet velocity towards player
             const speed = 100;
             this.scene.physics.velocityFromRotation(angle, speed, bullet.body.velocity);
         } else {
-            // If no player, shoot straight down
             bullet.setVelocityY(this.E_bullet_speed * 60);
         }
-        
-        // Store bullet reference
         this.scene.enemyProjectiles.push(bullet);
-        
-        // Update last fired time
         this.lastFired = currentTime;
     }
 
@@ -65,6 +59,4 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
         this.y += speedY;
         this.x += speedX;
     }
-
-    
 }
